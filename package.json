@@ -6,8 +6,6 @@
     "start": "vercel dev"
   },
   "dependencies": {
-    "cheerio": "^1.0.0",
-    "node-fetch": "^3.3.2"
+    "puppeteer": "^23.6.0"
   }
 }
-
