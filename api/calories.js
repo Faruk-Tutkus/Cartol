@@ -1,4 +1,4 @@
-import fetch from 'puppeteer';
+import puppeteer from 'puppeteer';
 export default async function handler(req, res) {
   const browser = await puppeteer.launch({
     headless: false,
