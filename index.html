@@ -34,7 +34,7 @@
       }
 
       try {
-        const response = await fetch(`/api/calories?food=${encodeURIComponent(food)}`);
+        const response = await fetch(`/api/calories`);
         const data = await response.json();
 
         if (response.ok) {
