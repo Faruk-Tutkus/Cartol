@@ -1,6 +1,7 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chrome from 'chrome-aws-lambda';
 
-export default async function handler(req, res) {
+export default async function hanedler(req, res) {
   const { food } = req.query;
 
   if (!food) {
@@ -10,10 +11,10 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    // Launch Puppeteer in headless mode
     browser = await puppeteer.launch({
-      headless: true, // Headless mode enabled
-      args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required in serverless environments
+      args: chrome.args,
+      executablePath: await chrome.executablePath,
+      headless: chrome.headless,
     });
 
     const page = await browser.newPage();
@@ -21,7 +22,6 @@ export default async function handler(req, res) {
 
     await page.goto(url, { waitUntil: 'networkidle2' });
 
-    // Extract protein value
     const protein = await page.evaluate(() => {
       const element = document.querySelector(
         '#solAnaSutun > div.p15.kurumsalBorder.backgroundWhite.mt-3 > div.mt-3 > div.d-flex.align-items-center.mt-2.carb-prot-fat > div:nth-child(3) > span.d-block.kkBigNumberIkincil.my-1 > span'
@@ -29,7 +29,6 @@ export default async function handler(req, res) {
       return element ? element.textContent.trim() : null;
     });
 
-    // Extract fat value
     const fat = await page.evaluate(() => {
       const element = document.querySelector(
         '#solAnaSutun > div.p15.kurumsalBorder.backgroundWhite.mt-3 > div.mt-3 > div.d-flex.align-items-center.mt-2.carb-prot-fat > div:nth-child(4) > span.d-block.kkBigNumberIkincil.my-1 > span'
@@ -39,7 +38,6 @@ export default async function handler(req, res) {
 
     await page.close();
 
-    // Send response
     if (protein && fat) {
       res.status(200).json({ calories: { protein, fat } });
     } else {
@@ -53,4 +51,4 @@ export default async function handler(req, res) {
       await browser.close();
     }
   }
-}
+};
