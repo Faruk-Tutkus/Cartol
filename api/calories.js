@@ -1,7 +1,7 @@
-const puppeteer = require('puppeteer-core');
-const chrome = require('chrome-aws-lambda');
+import puppeteer from 'puppeteer-core';
+import chrome from 'chrome-aws-lambda';
 
-module.exports = async (req, res) => {
+export default async function hanedler(req, res) {
   const { food } = req.query;
 
   if (!food) {
