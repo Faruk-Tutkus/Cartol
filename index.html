@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalori Bilgisi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kalori Bilgisi Sorgulama</h1>
+  <input type="text" id="foodInput" placeholder="Gıda ismi girin">
+  <button onclick="fetchCalories()">Sorgula</button>
+
+  <div id="result"></div>
+
+  <script>
+    async function fetchCalories() {
+      const food = document.getElementById('foodInput').value;
+      if (!food) {
+        alert('Lütfen bir gıda ismi girin.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/calories?food=${encodeURIComponent(food)}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          document.getElementById('result').innerHTML = `
+            <p>Protein: ${data.calories.protein}g</p>
+            <p>Yağ: ${data.calories.fat}g</p>
+          `;
+        } else {
+          document.getElementById('result').innerHTML = `<p>Hata: ${data.error}</p>`;
+        }
+      } catch (error) {
+        console.error('Hata:', error);
+        document.getElementById('result').innerHTML = '<p>Sunucu hatası.</p>';
+      }
+    }
+  </script>
+</body>
+</html>
