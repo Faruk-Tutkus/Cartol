@@ -1,43 +1,30 @@
-import puppeteer from 'puppeteer-core';
-import chrome from 'chrome-aws-lambda';
+import axios from 'axios';
+import cheerio from 'cheerio';
 
-export default async function hanedler(req, res) {
+export default async function handler(req, res) {
   const { food } = req.query;
 
   if (!food) {
     return res.status(400).json({ error: 'Gıda ismi belirtilmedi.' });
   }
 
-  let browser = null;
-
   try {
-    browser = await puppeteer.launch({
-      args: chrome.args,
-      executablePath: await chrome.executablePath,
-      headless: chrome.headless,
-    });
-
-    const page = await browser.newPage();
+    // İlgili URL'yi oluştur
     const url = `https://www.diyetkolik.com/kac-kalori/${encodeURIComponent(food)}`;
 
-    await page.goto(url, { waitUntil: 'networkidle2' });
+    // HTTP isteği yap
+    const response = await axios.get(url);
+    
+    // HTML içeriğini cheerio ile yükle
+    const $ = cheerio.load(response.data);
 
-    const protein = await page.evaluate(() => {
-      const element = document.querySelector(
-        '#solAnaSutun > div.p15.kurumsalBorder.backgroundWhite.mt-3 > div.mt-3 > div.d-flex.align-items-center.mt-2.carb-prot-fat > div:nth-child(3) > span.d-block.kkBigNumberIkincil.my-1 > span'
-      );
-      return element ? element.textContent.trim() : null;
-    });
+    // Protein değeri için seçici
+    const protein = $('#solAnaSutun > div.p15.kurumsalBorder.backgroundWhite.mt-3 > div.mt-3 > div.d-flex.align-items-center.mt-2.carb-prot-fat > div:nth-child(3) > span.d-block.kkBigNumberIkincil.my-1 > span').text().trim();
 
-    const fat = await page.evaluate(() => {
-      const element = document.querySelector(
-        '#solAnaSutun > div.p15.kurumsalBorder.backgroundWhite.mt-3 > div.mt-3 > div.d-flex.align-items-center.mt-2.carb-prot-fat > div:nth-child(4) > span.d-block.kkBigNumberIkincil.my-1 > span'
-      );
-      return element ? element.textContent.trim() : null;
-    });
+    // Yağ değeri için seçici
+    const fat = $('#solAnaSutun > div.p15.kurumsalBorder.backgroundWhite.mt-3 > div.mt-3 > div.d-flex.align-items-center.mt-2.carb-prot-fat > div:nth-child(4) > span.d-block.kkBigNumberIkincil.my-1 > span').text().trim();
 
-    await page.close();
-
+    // Eğer değerler varsa yanıt gönder
     if (protein && fat) {
       res.status(200).json({ calories: { protein, fat } });
     } else {
@@ -46,9 +33,5 @@ export default async function hanedler(req, res) {
   } catch (error) {
     console.error('Hata:', error);
     res.status(500).json({ error: 'Sunucu hatası.' });
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
   }
-};
+}
