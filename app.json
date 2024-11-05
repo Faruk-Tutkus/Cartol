@@ -1,17 +1,13 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "Cartol",
+    "slug": "Cartol",
     "version": "1.0.0",
     "orientation": "portrait",
+    "backgroundColor": "#00000000",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "Cartol",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": true
     },
