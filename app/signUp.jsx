@@ -5,33 +5,26 @@ import { router } from 'expo-router';
 export default function SignUp() {
   return (
     <View style={styles.container}>
-      <TextInput style={{width: 250, color:'red', backgroundColor: 'blue', fontSize: 25}}/>
+      <TextInput style={[styles.input, { marginBottom: 10 }]}/>
+      <TextInput style={[styles.input]}/>
     </View>
   )
 }
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    logoContainer: {
+      flex: 1,
+      justifyContent: 'center',
       alignItems: 'center',
-      marginTop: 80,
+      backgroundColor: '#4A4947'
     },
-    image: {
+    input: {
       width: 250,
-      height: 250,
-      resizeMode: 'cover',
-    },
-    text: {
-      fontSize: 48,
       color: '#FAF7F0',
-      fontFamily: 'delius',
-      textAlign: 'center',
-    },
-    buttonContainer: {
-      marginBottom: 250,
-    },
+      backgroundColor: '#656565',
+      fontSize: 35,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: '#252525'
+    }
   });
   

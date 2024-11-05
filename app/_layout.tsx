@@ -26,8 +26,8 @@ export default function RootLayout() {
       }}
     >
       <Stack.Screen name="index"  options={{animation: 'fade'}}/>
-      <Stack.Screen name="splashScreen" options={{animation: 'none'}}/>
-      <Stack.Screen name="startScreen"  options={{animation: 'fade'}}/>
+      <Stack.Screen name="splashScreen" options={{animation: 'fade'}}/>
+      <Stack.Screen name="startScreen"  options={{animation: 'none'}}/>
       <Stack.Screen name="newUser"  options={{animation: 'fade'}}/>
       <Stack.Screen name="signUp"  options={{animation: 'fade'}}/>
     </Stack>
