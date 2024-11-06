@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Dimensions, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { width } = Dimensions.get('window');
@@ -11,28 +11,51 @@ export default function NewUser() {
 
   const handleNext = () => {
     const nextPage = currentPage + 1;
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ x: nextPage * width, animated: true });
-      setCurrentPage(nextPage);
+    if (nextPage < 3) { // Eğer toplam 3 sayfa varsa (index 0, 1, 2 olacak şekilde)
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ x: nextPage * width, animated: true });
+        setCurrentPage(nextPage);
+      }
     }
   };
 
+  const handlePrevious = () => {
+    const previousPage = currentPage - 1;
+    if (previousPage >= 0) {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ x: previousPage * width, animated: true });
+        setCurrentPage(previousPage);
+      }
+    }
+  };
+
+  const handleScroll = (event) => {
+    const pageIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+    setCurrentPage(pageIndex);
+  };
+
   return (
-    <ScrollView
+    <SafeAreaView style={[styles.container]}>
+      <ScrollView
       horizontal
       pagingEnabled
       ref={scrollViewRef}
       showsHorizontalScrollIndicator={false}
+      scrollEnabled={true} // Elle kaydırma etkin
       contentContainerStyle={styles.scrollContainer}
+      onScroll={handleScroll} // Sayfa değişimini takip etmek için
+      scrollEventThrottle={16} // Performans için optimize edilmiş scroll takip
     >
       {/* İlk Sayfa - İsim Girişi */}
       <View style={styles.page}>
-        <TouchableOpacity style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        {currentPage > 0 && (
+          <TouchableOpacity style={styles.backButton} onPress={handlePrevious}>
+            <Icon name="arrow-back" size={24} color="#656565" />
+          </TouchableOpacity>
+        )}
         <Text style={styles.title}>İsim</Text>
         <Text style={styles.subtitle}>
-          Merhaba! FatSecret uygulamasını size özel olarak kişiselleştirmek için sizi tanımak istiyoruz.
+          Merhaba
         </Text>
         <View style={styles.inputContainer}>
           <TextInput
@@ -47,7 +70,7 @@ export default function NewUser() {
           İsminiz gizli kalır ve yalnızca sizin tarafınızdan görülür.
         </Text>
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Icon name="arrow-forward" size={24} color="#FFFFFF" />
+          <Icon name="arrow-forward" size={24} color="#656565" />
         </TouchableOpacity>
         <TouchableOpacity>
           <Text style={styles.skipText}>Geç</Text>
@@ -57,26 +80,29 @@ export default function NewUser() {
       {/* Diğer Sayfalar */}
       <View style={styles.page}>
         <Text style={styles.title}>Diğer Sayfa 1</Text>
-        {/* İçerik */}
+        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+          <Icon name="arrow-forward" size={24} color="#656565" />
+        </TouchableOpacity>
       </View>
       <View style={styles.page}>
         <Text style={styles.title}>Diğer Sayfa 2</Text>
-        {/* İçerik */}
+        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+          <Icon name="arrow-forward" size={24} color="#656565" />
+        </TouchableOpacity>
       </View>
       {/* İstediğiniz kadar sayfa ekleyebilirsiniz */}
-      <View style={styles.page}>
-        <Text style={styles.title}>Diğer Sayfa 2</Text>
-        {/* İçerik */}
-      </View>
-      <View style={styles.page}>
-        <Text style={styles.title}>Diğer Sayfa 2</Text>
-        {/* İçerik */}
-      </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  container:{
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#4A4947',
+  },
   scrollContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -86,12 +112,12 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1A1A1A',
   },
   backButton: {
     position: 'absolute',
     top: 20,
     left: 10,
+    zIndex: 1,
   },
   title: {
     fontSize: 24,
@@ -107,16 +133,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   inputContainer: {
-    width: '80%',
-    borderWidth: 1,
-    borderColor: '#32CD32',
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+    width: 300,
+    height: 70,
+    backgroundColor: '#656565',
     borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
+    borderWidth: 2,
+    borderColor: '#252525',
+    paddingHorizontal: 10,
   },
   input: {
-    fontSize: 18,
-    color: '#FFFFFF',
+    flex: 1,
+    fontSize: 20,
+    color: '#FAF7F0',
+    textAlign: 'left',
   },
   note: {
     fontSize: 12,
@@ -128,7 +160,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#32CD32',
+    backgroundColor: '#FAF7F0',
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 20,
