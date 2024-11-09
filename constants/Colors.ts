@@ -1,14 +1,10 @@
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    icon: '#687076',
-    tabIconDefault: '#687076',
-  },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    text: '#FAF7F0',
+    inputBackgroundColor: '#656565',
+    inputBorderColor: '#252525',
+    background: '#4A4947',
+    buttonColor: '#FAF7F0',
+    buttonTextColor: '#4A4947',
   },
 };

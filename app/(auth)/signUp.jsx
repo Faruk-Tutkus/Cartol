@@ -5,13 +5,17 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 export default function SignUp() {
   const [isFocusedEmail, setIsFocusedEmail] = useState(false);
   const [isFocusedPassword, setIsFocusedPassword] = useState(false);
+  const [isFocusedRePassword, setIsFocusedRePassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showRePassword, setShowRePassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rePassword, setRePassword] = useState('');
 
   const emailLabelAnim = useRef(new Animated.Value(0)).current;
   const passwordLabelAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const rePasswordLabelAnim = useRef(new Animated.Value(0)).current;
+  //const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const handleEmailChange = (text) => {
     setEmail(text);
@@ -30,12 +34,12 @@ export default function SignUp() {
       useNativeDriver: true,
     }).start();
 
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
+    Animated.timing(rePasswordLabelAnim, {
+      toValue: isFocusedRePassword || rePassword ? -35 : 0,
+      duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [isFocusedEmail, isFocusedPassword, email, password]);
+  }, [isFocusedEmail, isFocusedPassword, isFocusedRePassword, email, password]);
 
   const animatedLabelStyle = (animation) => ({
     transform: [{ translateY: animation }],
@@ -57,7 +61,7 @@ export default function SignUp() {
       >
         <SafeAreaView style={[styles.container]}>
           <View>
-            <Animated.View style={[styles.inputContainer, { opacity: fadeAnim }]}>
+            <View style={[styles.inputContainer]}>
               <Icon name="email" size={24} color="#FAF7F0" style={styles.icon} />
               <Animated.Text style={animatedLabelStyle(emailLabelAnim)}>E-mail</Animated.Text>
               <TextInput
@@ -70,9 +74,9 @@ export default function SignUp() {
                 cursorColor={'#FAF7F0'}
                 style={styles.input}
               />
-            </Animated.View>
+            </View>
 
-            <Animated.View style={[styles.inputContainer, { opacity: fadeAnim, marginTop: 20 }]}>
+            <View style={[styles.inputContainer, { marginTop: 20 }]}>
               <Icon name="lock" size={24} color="#FAF7F0" style={styles.icon} />
               <Animated.Text style={animatedLabelStyle(passwordLabelAnim)}>Şifre</Animated.Text>
               <TextInput
@@ -87,31 +91,44 @@ export default function SignUp() {
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
                 <Icon name={showPassword ? "eye-off" : "eye"} size={24} color="#FAF7F0" />
               </TouchableOpacity>
-            </Animated.View>
+            </View>
 
+            <View style={[styles.inputContainer, { marginTop: 20 }]}>
+              <Icon name="lock" size={24} color="#FAF7F0" style={styles.icon} />
+              <Animated.Text style={animatedLabelStyle(rePasswordLabelAnim)}>Şifre Tekrar</Animated.Text>
+              <TextInput
+                value={rePassword}
+                onChangeText={setRePassword}
+                onFocus={() => setIsFocusedRePassword(true)}
+                onBlur={() => setIsFocusedRePassword(false)}
+                secureTextEntry={!showRePassword}
+                cursorColor={'#FAF7F0'}
+                style={styles.input}
+              />
+              <TouchableOpacity onPress={() => setShowRePassword(!showRePassword)} style={styles.eyeIcon}>
+                <Icon name={showRePassword ? "eye-off" : "eye"} size={24} color="#FAF7F0" />
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity style={styles.loginButton}>
-              <Text style={styles.loginButtonText}>Giriş Yap</Text>
+              <Text style={styles.loginButtonText}>Üye Ol</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity>
-              <Text style={styles.forgotPassword}>Şifrenizi mi unuttunuz?</Text>
-            </TouchableOpacity>
+            <View style={styles.line}></View>
           </View>
 
           <View style={styles.socialButtonsContainer}>
             <TouchableOpacity style={styles.socialButton}>
-              <Image source={require('./../assets/images/google.png')} style={styles.socialLogo} />
-              <Text style={styles.socialButtonText}>Google ile Giriş Yap</Text>
+              <Image source={require('./../../assets/images/google.png')} style={styles.socialLogo} />
+              <Text style={styles.socialButtonText}>Google ile Üye Ol</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.socialButton}>
-              <Image source={require('./../assets/images/facebook.png')} style={styles.socialLogo} />
-              <Text style={styles.socialButtonText}>Facebook ile Giriş Yap</Text>
+              <Image source={require('./../../assets/images/facebook.png')} style={styles.socialLogo} />
+              <Text style={styles.socialButtonText}>Facebook ile Üye Ol</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.socialButton}>
-              <Image source={require('./../assets/images/apple.png')} style={styles.socialLogo} />
-              <Text style={styles.socialButtonText}>Apple ile Giriş Yap</Text>
+              <Image source={require('./../../assets/images/apple.png')} style={styles.socialLogo} />
+              <Text style={styles.socialButtonText}>Apple ile Üye Ol</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -170,15 +187,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  forgotPassword: {
-    color: '#FAF7F0',
-    fontSize: 16,
-    marginTop: 15,
-    textDecorationLine: 'underline',
-    textAlign: 'center'
+  line: {
+    backgroundColor: '#FAF7F0',
+    marginTop:35,
+    width:300,
+    height:2,
+    alignSelf:'center'
   },
   socialButtonsContainer: {
-    marginTop: 30,
+    marginTop: 20,
   },
   socialButton: {
     flexDirection: 'row',

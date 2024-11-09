@@ -39,7 +39,7 @@ export default function StartScreen() {
           backgroundDarker="#252525"
           textColor="#FAF7F0"
           onPress={()=> {
-            router.navigate('/newUser')
+            router.navigate('/(auth)/newUser')
           }}
         >
           Yeni Kullanıcıyım
@@ -53,7 +53,7 @@ export default function StartScreen() {
           textColor="#FAF7F0"
           style={{ marginTop: 20 }}
           onPress={()=> {
-            router.navigate('/signUp')
+            router.navigate('./(auth)/signIn')
           }}
         >
           Zaten Bir Hesabım Var

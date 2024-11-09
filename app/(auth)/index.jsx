@@ -1,5 +1,6 @@
-import Splash from "./splashScreen";
-import startScreen from "./startScreen";
+import signUp from "./signUp";
+import signIn from "./signIn";
+import newUser from "./newUser";
 import React, { useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -11,9 +12,10 @@ SplashScreen.preventAutoHideAsync()
 export default function App() {
   return (
     <NavigationContainer independent={true}>
-      <Stack.Navigator initialRouteName="Splash">
-          <Stack.Screen name="Splash" component={Splash} options={{ headerShown: false}} />
-          <Stack.Screen name="startScreen" component={startScreen} options={{ headerShown: false }}/>
+      <Stack.Navigator initialRouteName="newUser">
+        <Stack.Screen name="newUser" component={newUser} options={{ headerShown: false }}/>
+          <Stack.Screen name="signIn" component={signIn} options={{ headerShown: false }}/>
+          <Stack.Screen name="signUp" component={signUp} options={{ headerShown: false }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
