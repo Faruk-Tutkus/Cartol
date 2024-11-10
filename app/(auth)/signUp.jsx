@@ -1,8 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback  } from 'react';
 import { View, Text, Animated, TextInput, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, BackHandler  } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSignUp } from '@clerk/clerk-expo'
 import { useRouter } from 'expo-router'
+import { useOAuth } from '@clerk/clerk-expo'
+import * as Linking from 'expo-linking'
+import * as WebBrowser from 'expo-web-browser'
+export const useWarmUpBrowser = () => {
+  React.useEffect(() => {
+    void WebBrowser.warmUpAsync()
+    return () => {
+      void WebBrowser.coolDownAsync()
+    }
+  }, [])
+}
+WebBrowser.maybeCompleteAuthSession()
 export default function SignUp() {
   const { isLoaded, signUp, setActive } = useSignUp()
   const router = useRouter()
@@ -37,7 +49,7 @@ export default function SignUp() {
     try {
       await signUp.create({
         emailAddress: email,
-        password: password
+        password: password,
       })
 
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
@@ -104,6 +116,37 @@ export default function SignUp() {
       console.log(err["errors"][0]["message"])
     }
   }
+
+
+  useWarmUpBrowser()
+  const { startOAuthFlow: startGoogleOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
+  const { startOAuthFlow: startFacebookOAuthFlow } = useOAuth({ strategy: 'oauth_facebook' });
+  const { startOAuthFlow: startAppleOAuthFlow } = useOAuth({ strategy: 'oauth_apple' });
+
+  const onPressOAuth = useCallback(async (provider) => {
+    try {
+      const startOAuthFlow = 
+        provider === 'google' ? startGoogleOAuthFlow :
+        provider === 'facebook' ? startFacebookOAuthFlow :
+        startAppleOAuthFlow;
+
+      const { createdSessionId, setActive } = await startOAuthFlow({
+        redirectUrl: Linking.createURL('/home', { scheme: 'myapp' }),
+      });
+
+      if (createdSessionId) {
+        setActive({ session: createdSessionId });
+      } else {
+        // Handle the case where additional steps are needed
+      }
+    } catch (err) {
+      Alert.alert("OAuth Error", `An error occurred during the OAuth process: ${err.message || err}`);
+      console.error("OAuth error", err);
+    }
+  }, []);
+
+
+
   const emailLabelAnim = useRef(new Animated.Value(0)).current;
   const passwordLabelAnim = useRef(new Animated.Value(0)).current;
   const rePasswordLabelAnim = useRef(new Animated.Value(0)).current;
@@ -363,17 +406,17 @@ export default function SignUp() {
               </View>
 
               <View style={styles.socialButtonsContainer}>
-                <TouchableOpacity style={styles.socialButton}>
+                <TouchableOpacity style={styles.socialButton} onPress={() => onPressOAuth('google')}>
                   <Image source={require('./../../assets/images/google.png')} style={styles.socialLogo} />
                   <Text style={styles.socialButtonText}>Google ile Üye Ol</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.socialButton}>
+                <TouchableOpacity style={styles.socialButton} onPress={() => onPressOAuth('facebook')}>
                   <Image source={require('./../../assets/images/facebook.png')} style={styles.socialLogo} />
                   <Text style={styles.socialButtonText}>Facebook ile Üye Ol</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.socialButton}>
+                <TouchableOpacity style={styles.socialButton} onPress={() => onPressOAuth('apple')}>
                   <Image source={require('./../../assets/images/apple.png')} style={styles.socialLogo} />
                   <Text style={styles.socialButtonText}>Apple ile Üye Ol</Text>
                 </TouchableOpacity>
@@ -410,4 +453,3 @@ export default function SignUp() {
     </KeyboardAvoidingView>
   );
 }
-
