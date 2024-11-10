@@ -12,10 +12,10 @@ SplashScreen.preventAutoHideAsync()
 export default function App() {
   return (
     <NavigationContainer independent={true}>
-      <Stack.Navigator initialRouteName="newUser">
+      <Stack.Navigator initialRouteName="SignUp">
         <Stack.Screen name="newUser" component={newUser} options={{ headerShown: false }}/>
-          <Stack.Screen name="signIn" component={signIn} options={{ headerShown: false }}/>
-          <Stack.Screen name="signUp" component={signUp} options={{ headerShown: false }}/>
+        <Stack.Screen name="signIn" component={signIn} options={{ headerShown: false }}/>
+        <Stack.Screen name="signUp" component={signUp} options={{ headerShown: false }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

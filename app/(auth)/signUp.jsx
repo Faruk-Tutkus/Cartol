@@ -1,22 +1,140 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Animated, TextInput, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, Animated, TextInput, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, BackHandler  } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import { useSignUp } from '@clerk/clerk-expo'
+import { useRouter } from 'expo-router'
 export default function SignUp() {
+  const { isLoaded, signUp, setActive } = useSignUp()
+  const router = useRouter()
   const [isFocusedEmail, setIsFocusedEmail] = useState(false);
   const [isFocusedPassword, setIsFocusedPassword] = useState(false);
   const [isFocusedRePassword, setIsFocusedRePassword] = useState(false);
+  const [isFocusedCode, setIsFocusedCode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rePassword, setRePassword] = useState('');
+  const [code, setCode] = useState('')
+  const [pendingVerification, setPendingVerification] = useState(false)
+  const [message, setMessage] = useState('')
+  const [textSize, setTextSize] = useState(0)
+  const onSignUpPress = async () => {
+    if (password != rePassword){
+      setTextSize(17)
+      setMessage('Şifreler uyuşmuyor')
+      triggerShakeAndColor();
+      return
+    }
+    if (!isLoaded) {
+      return
+    }
+    else {
+      setMessage('')
+      setTextSize(0)
+    }
+      
+    try {
+      await signUp.create({
+        emailAddress: email,
+        password: password
+      })
 
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+
+      setPendingVerification(true)
+    } catch (err) {
+      setTextSize(17)
+      
+      if (err["errors"][0]["message"] === "Too many requests. Please try again in a bit."){
+        setMessage("Çok fazla istek. Lütfen biraz bekleyin")
+      }
+      else if (err["errors"][0]["message"] === "Passwords must be 8 characters or more."){
+        setMessage("Şifre en az 8 karakterden oluşmalı")
+      }
+      else if (err["errors"][0]["message"] === "Password has been found in an online data breach. For account safety, please use a different password."){
+        setMessage("Bu şifre çok yaygın! Hesap güvenliği için lütfen farklı bir şifre kullanın")
+      }
+      else if (err["errors"][0]["message"] === "Enter email address."){
+        setMessage("Lütfen geçerli bir e-mail adresi girin")
+      }
+      else if (password === ''){
+        setMessage('Lütfen geçerli bir şifre girin')
+        triggerShakeAndColor();
+      }
+      else if (err["errors"][0]["message"] === "Session already exists"){
+        setMessage("Kullanıcı zaten mevcut.")
+      }
+      else if (err["errors"][0]["message"] === "That email address is taken. Please try another."){
+        setMessage("Kullanıcı zaten mevcut.")
+      }
+      console.log(err["errors"][0]["message"])
+    }
+  }
+  const onPressVerify = async () => {
+    if (!isLoaded) {
+      return
+    }
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code,
+      })
+
+      if (completeSignUp.status === 'complete') {
+        await setActive({ session: completeSignUp.createdSessionId })
+        router.replace('/home')
+      } else {
+        console.error(JSON.stringify(completeSignUp, null, 2))
+      }
+    } catch (err) {
+      setMessage('')
+      setTextSize(17)
+      if (err["errors"][0]["message"] === "is incorrect"){
+        setMessage("Hatalı Kod")
+      }
+      else if (err["errors"][0]["message"] === "failed"){
+        setMessage("Kod doğrulaması başarısız oldu")
+      }
+      else if (err["errors"][0]["message"] === "Too many requests. Please try again in a bit."){
+        setMessage("Çok fazla istek. Lütfen biraz bekleyin")
+      }
+      else if (err["errors"][0]["message"] === "Enter code."){
+        setMessage("Lütfen kodu girin")
+      }
+      console.log(err["errors"][0]["message"])
+    }
+  }
   const emailLabelAnim = useRef(new Animated.Value(0)).current;
   const passwordLabelAnim = useRef(new Animated.Value(0)).current;
   const rePasswordLabelAnim = useRef(new Animated.Value(0)).current;
-  //const fadeAnim = useRef(new Animated.Value(0)).current;
+  const codeLabelAnim = useRef(new Animated.Value(0)).current;
+  const shakePasswordAnim = useRef(new Animated.Value(0)).current
+  const colorValue = useRef(new Animated.Value(0)).current;
+  const triggerShakeAndColor = () => {
+    Animated.timing(colorValue, {
+      toValue: 1, // Hedef değer
+      duration: 500,
+      useNativeDriver: true, // Renk animasyonları için false kullanmalıyız
+    }).start(() => {
+      // Animasyon bitince geri döndürmek için
+      Animated.timing(colorValue, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    });
+    Animated.sequence([
+      Animated.timing(shakePasswordAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakePasswordAnim, { toValue: -10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakePasswordAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakePasswordAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
+    ]).start();
 
+  }
+  const interpolatedColor = colorValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#252525', '#B17457'], // Başlangıç ve bitiş renkleri
+  });
   const handleEmailChange = (text) => {
     setEmail(text);
   };
@@ -39,7 +157,13 @@ export default function SignUp() {
       duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [isFocusedEmail, isFocusedPassword, isFocusedRePassword, email, password]);
+
+    Animated.timing(codeLabelAnim, {
+      toValue: isFocusedCode || code ? -35 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isFocusedEmail, isFocusedPassword, isFocusedCode, isFocusedRePassword, email, password]);
 
   const animatedLabelStyle = (animation) => ({
     transform: [{ translateY: animation }],
@@ -49,7 +173,121 @@ export default function SignUp() {
     left: 45,
     top: 20,
   });
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#4A4947',
+      paddingHorizontal: 20,
+      padding: 100,
+    },
+    text: {
+      textAlign: 'center',
+      fontSize: textSize,
+      color: '#F15457',
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      position: 'relative',
+      width: 300,
+      height: 70,
+      backgroundColor: '#656565',
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: '#252525',
+      paddingHorizontal: 10,
+    },
+    passwordContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      position: 'relative',
+      width: 300,
+      height: 70,
+      backgroundColor: '#656565',
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: interpolatedColor,
+      paddingHorizontal: 10,
+    },
+    input: {
+      flex: 1,
+      fontSize: 20,
+      color: '#FAF7F0',
+      paddingLeft: 40,
+      textAlign: 'left',
+    },
+    icon: {
+      position: 'absolute',
+      left: 10,
+    },
+    eyeIcon: {
+      position: 'absolute',
+      right: 10,
+    },
+    loginButton: {
+      width: 300,
+      height: 50,
+      backgroundColor: '#FAF7F0',
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 30,
+    },
+    loginButtonText: {
+      color: '#4A4947',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    line: {
+      backgroundColor: '#FAF7F0',
+      marginTop:25,
+      width:300,
+      height:2,
+      alignSelf:'center'
+    },
+    socialButtonsContainer: {
+      marginTop: 20,
+    },
+    socialButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FAF7F0',
+      borderRadius: 10,
+      width: 300,
+      height: 50,
+      marginTop: 15,
+      paddingHorizontal: 10,
+    },
+    socialLogo: {
+      width: 24,
+      height: 24,
+      marginRight: 10,
+    },
+    socialButtonText: {
+      color: '#4A4947',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+  });
+  useEffect(() => {
+    const onBackPress = () => {
+      if (pendingVerification) {
+        setPendingVerification(false);
+        setMessage('')
+        setTextSize(0)
+        return true; // Geri tuşunu yönetmiş olduk, default davranışı engelledik
+      }
+      return false; // Varsayılan geri davranışını devam ettir
+    };
 
+    // BackHandler event listener'ı ekle
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+    // Component unmount olduğunda event listener'ı kaldır
+    return () => backHandler.remove();
+  }, [pendingVerification]);
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -60,161 +298,116 @@ export default function SignUp() {
         keyboardShouldPersistTaps="handled"
       >
         <SafeAreaView style={[styles.container]}>
-          <View>
-            <View style={[styles.inputContainer]}>
-              <Icon name="email" size={24} color="#FAF7F0" style={styles.icon} />
-              <Animated.Text style={animatedLabelStyle(emailLabelAnim)}>E-mail</Animated.Text>
-              <TextInput
-                value={email}
-                onChangeText={handleEmailChange}
-                onFocus={() => setIsFocusedEmail(true)}
-                onBlur={() => setIsFocusedEmail(false)}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                cursorColor={'#FAF7F0'}
-                style={styles.input}
-              />
-            </View>
+          {!pendingVerification && (
+            <>
+              <View>
+                <View style={[styles.inputContainer]}>
+                  <Icon name="email" size={24} color="#FAF7F0" style={styles.icon} />
+                  <Animated.Text style={animatedLabelStyle(emailLabelAnim)}>E-mail</Animated.Text>
+                  <TextInput
+                    value={email}
+                    onChangeText={handleEmailChange}
+                    onFocus={() => setIsFocusedEmail(true)}
+                    onBlur={() => setIsFocusedEmail(false)}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    cursorColor={'#FAF7F0'}
+                    style={styles.input}
+                  />
+                </View>
 
-            <View style={[styles.inputContainer, { marginTop: 20 }]}>
-              <Icon name="lock" size={24} color="#FAF7F0" style={styles.icon} />
-              <Animated.Text style={animatedLabelStyle(passwordLabelAnim)}>Şifre</Animated.Text>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                onFocus={() => setIsFocusedPassword(true)}
-                onBlur={() => setIsFocusedPassword(false)}
-                secureTextEntry={!showPassword}
-                cursorColor={'#FAF7F0'}
-                style={styles.input}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <Icon name={showPassword ? "eye-off" : "eye"} size={24} color="#FAF7F0" />
+                <Animated.View style={[styles.passwordContainer, { marginTop: 20, transform:[{translateX: shakePasswordAnim}] }]}>
+                  <Icon name="lock" size={24} color="#FAF7F0" style={styles.icon} />
+                  <Animated.Text style={animatedLabelStyle(passwordLabelAnim)}>Şifre</Animated.Text>
+                  <TextInput
+                    value={password}
+                    onChangeText={setPassword}
+                    onFocus={() => setIsFocusedPassword(true)}
+                    onBlur={() => setIsFocusedPassword(false)}
+                    secureTextEntry={!showPassword}
+                    cursorColor={'#FAF7F0'}
+                    style={styles.input}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                    <Icon name={showPassword ? "eye-off" : "eye"} size={24} color="#FAF7F0" />
+                  </TouchableOpacity>
+                </Animated.View>
+
+                <Animated.View style={[styles.passwordContainer, { marginTop: 20, transform:[{translateX: shakePasswordAnim}] }]}>
+                  <Icon name="lock" size={24} color="#FAF7F0" style={styles.icon} />
+                  <Animated.Text style={animatedLabelStyle(rePasswordLabelAnim)}>Şifre Tekrar</Animated.Text>
+                  <TextInput
+                    value={rePassword}
+                    onChangeText={setRePassword}
+                    onFocus={() => setIsFocusedRePassword(true)}
+                    onBlur={() => setIsFocusedRePassword(false)}
+                    secureTextEntry={!showRePassword}
+                    cursorColor={'#FAF7F0'}
+                    style={styles.input}
+                  />
+                  <TouchableOpacity onPress={() => setShowRePassword(!showRePassword)} style={styles.eyeIcon}>
+                    <Icon name={showRePassword ? "eye-off" : "eye"} size={24} color="#FAF7F0" />
+                  </TouchableOpacity>
+                </Animated.View>
+                <TouchableOpacity style={styles.loginButton}
+                  onPress={onSignUpPress}  
+                >
+                  <Text style={styles.loginButtonText}>Üye Ol</Text>
+                </TouchableOpacity>
+                <View style={{paddingTop: 20}}>
+                  <Text style={styles.text}>
+                    {message}
+                  </Text>
+                </View>
+                <View style={styles.line}></View>
+              </View>
+
+              <View style={styles.socialButtonsContainer}>
+                <TouchableOpacity style={styles.socialButton}>
+                  <Image source={require('./../../assets/images/google.png')} style={styles.socialLogo} />
+                  <Text style={styles.socialButtonText}>Google ile Üye Ol</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.socialButton}>
+                  <Image source={require('./../../assets/images/facebook.png')} style={styles.socialLogo} />
+                  <Text style={styles.socialButtonText}>Facebook ile Üye Ol</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.socialButton}>
+                  <Image source={require('./../../assets/images/apple.png')} style={styles.socialLogo} />
+                  <Text style={styles.socialButtonText}>Apple ile Üye Ol</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+          {pendingVerification && (
+            <>
+              <View style={{paddingTop: 20}}>
+                <Text style={styles.text}>
+                  {message}
+                </Text>
+              </View>
+              <View style={[styles.inputContainer, { marginTop: 20 }]}>
+                  <Icon name="code-tags" size={24} color="#FAF7F0" style={styles.icon} />
+                  <Animated.Text style={animatedLabelStyle(codeLabelAnim)}>Kod</Animated.Text>
+                  <TextInput
+                    value={code}
+                    onChangeText={setCode}
+                    onFocus={() => setIsFocusedCode(true)}
+                    onBlur={() => setIsFocusedCode(false)}
+                    cursorColor={'#FAF7F0'}
+                    style={styles.input}
+                    keyboardType='numeric'
+                  />
+                </View>
+              <TouchableOpacity style={styles.loginButton} onPress={onPressVerify} >
+              <Text style={styles.loginButtonText}>Doğrula</Text>
               </TouchableOpacity>
-            </View>
-
-            <View style={[styles.inputContainer, { marginTop: 20 }]}>
-              <Icon name="lock" size={24} color="#FAF7F0" style={styles.icon} />
-              <Animated.Text style={animatedLabelStyle(rePasswordLabelAnim)}>Şifre Tekrar</Animated.Text>
-              <TextInput
-                value={rePassword}
-                onChangeText={setRePassword}
-                onFocus={() => setIsFocusedRePassword(true)}
-                onBlur={() => setIsFocusedRePassword(false)}
-                secureTextEntry={!showRePassword}
-                cursorColor={'#FAF7F0'}
-                style={styles.input}
-              />
-              <TouchableOpacity onPress={() => setShowRePassword(!showRePassword)} style={styles.eyeIcon}>
-                <Icon name={showRePassword ? "eye-off" : "eye"} size={24} color="#FAF7F0" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.loginButton}>
-              <Text style={styles.loginButtonText}>Üye Ol</Text>
-            </TouchableOpacity>
-            <View style={styles.line}></View>
-          </View>
-
-          <View style={styles.socialButtonsContainer}>
-            <TouchableOpacity style={styles.socialButton}>
-              <Image source={require('./../../assets/images/google.png')} style={styles.socialLogo} />
-              <Text style={styles.socialButtonText}>Google ile Üye Ol</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.socialButton}>
-              <Image source={require('./../../assets/images/facebook.png')} style={styles.socialLogo} />
-              <Text style={styles.socialButtonText}>Facebook ile Üye Ol</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.socialButton}>
-              <Image source={require('./../../assets/images/apple.png')} style={styles.socialLogo} />
-              <Text style={styles.socialButtonText}>Apple ile Üye Ol</Text>
-            </TouchableOpacity>
-          </View>
+            </>
+          )}
         </SafeAreaView>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#4A4947',
-    paddingHorizontal: 20,
-    padding: 100,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
-    width: 300,
-    height: 70,
-    backgroundColor: '#656565',
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#252525',
-    paddingHorizontal: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 20,
-    color: '#FAF7F0',
-    paddingLeft: 40,
-    textAlign: 'left',
-  },
-  icon: {
-    position: 'absolute',
-    left: 10,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 10,
-  },
-  loginButton: {
-    width: 300,
-    height: 50,
-    backgroundColor: '#FAF7F0',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 30,
-  },
-  loginButtonText: {
-    color: '#4A4947',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  line: {
-    backgroundColor: '#FAF7F0',
-    marginTop:35,
-    width:300,
-    height:2,
-    alignSelf:'center'
-  },
-  socialButtonsContainer: {
-    marginTop: 20,
-  },
-  socialButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FAF7F0',
-    borderRadius: 10,
-    width: 300,
-    height: 50,
-    marginTop: 15,
-    paddingHorizontal: 10,
-  },
-  socialLogo: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-  },
-  socialButtonText: {
-    color: '#4A4947',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});

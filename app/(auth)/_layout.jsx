@@ -9,7 +9,7 @@ export default function AuthRoutesLayout() {
           contentStyle: {backgroundColor : '#4A4947'},
         }}
       >
-        <Stack.Screen name="newUser" options={{animation: 'slide_from_right'}}/>
+        {/* <Stack.Screen name="newUser" options={{animation: 'slide_from_right'}}/> */}
         <Stack.Screen name="signIn" options={{animation: 'slide_from_right'}}/>
         <Stack.Screen name="signUp" options={{animation: 'slide_from_right'}}/>
       </Stack>
