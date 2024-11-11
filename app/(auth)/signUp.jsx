@@ -442,7 +442,7 @@ export default function SignUp() {
                     style={styles.input}
                     keyboardType='numeric'
                   />
-                </View>
+              </View>
               <TouchableOpacity style={styles.loginButton} onPress={onPressVerify} >
               <Text style={styles.loginButtonText}>Doğrula</Text>
               </TouchableOpacity>
