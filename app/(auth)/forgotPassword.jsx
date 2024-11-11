@@ -3,7 +3,7 @@ import { View, Text, Animated, TextInput, StyleSheet, TouchableOpacity, Image, K
 import { useSignIn, useAuth } from '@clerk/clerk-expo'
 import { useRouter } from 'expo-router'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-export default function forgotPassword() {
+export default function ForgotPassword() {
 
     const [isFocusedEmail, setIsFocusedEmail] = useState(false);
     const [isFocusedPassword, setIsFocusedPassword] = useState(false);

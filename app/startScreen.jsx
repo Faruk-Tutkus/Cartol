@@ -39,7 +39,7 @@ export default function StartScreen() {
           backgroundDarker="#252525"
           textColor="#FAF7F0"
           onPress={()=> {
-            router.navigate('/(auth)/signUp')
+            router.navigate('/(auth)')
           }}
         >
           Yeni Kullanıcıyım
