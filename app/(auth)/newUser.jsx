@@ -213,7 +213,7 @@ export default function NewUser() {
           <TouchableOpacity
             style={[styles.nextButton, exerciseGoal ? styles.activeButton : styles.disabledButton]}
             onPress={()=> {
-              router.navigate('/signUp')
+              router.replace({ pathname: "/(auth)/signUp", params: { name } })
             }}
             disabled={!exerciseGoal}
           >

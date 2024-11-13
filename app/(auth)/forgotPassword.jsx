@@ -33,15 +33,21 @@ export default function ForgotPassword() {
             setTextSize(17)
 			console.log(err.errors[0].message);
             if (err["errors"][0]["message"] === "Identifier is invalid."){
-                setMessage("Lütfen geçerli bir e-posta girin")
-                triggerShakeAndColor()
+              setMessage("Lütfen geçerli bir e-posta girin")
+              triggerShakeAndColor()
             }
             else if (err["errors"][0]["message"] === "Couldn't find your account."){
-                setMessage("E-posta bulunamadı")
-                triggerShakeAndColor()
+              setMessage("E-posta bulunamadı")
+              triggerShakeAndColor()
             }
             else if (err["errors"][0]["message"] === "You're already signed in"){
-                setMessage("Oturum zaten açık, lütfen önce çıkış yapın")
+              setMessage("Oturum zaten açık, lütfen önce çıkış yapın")
+            }
+            else if (err["errors"][0]["message"] === "Too many requests. Please try again in a bit."){
+              setMessage("Çok fazla istek, lütfen biraz bekleyin")
+            }
+            else if (err["errors"][0]["message"] === "reset_password_email_code is not allowed"){
+              setMessage("Şifre sıfırlamaya şu anlık izin verilemiyor")
             }
 		}
 	};

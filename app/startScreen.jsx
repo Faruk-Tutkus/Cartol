@@ -1,12 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, Image, StyleSheet } from 'react-native';
 import { ThemedButton } from "react-native-really-awesome-button";
+import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/clerk-expo'
 import { router } from 'expo-router';
 export default function StartScreen() {
   const image = require('./../assets/images/logo.png');
   const translateYAnim = useRef(new Animated.Value(3)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current; // Butonlar için fade animasyonu
 
+  const { user } = useUser()
+  const { signOut } = useAuth()
   useEffect(() => {
     // Görsel ve yazı animasyonu
     Animated.spring(translateYAnim, {
@@ -31,34 +34,70 @@ export default function StartScreen() {
         <Text style={styles.text}>Cartol</Text>
       </Animated.View>
       
-      <Animated.View style={[styles.buttonContainer, { opacity: fadeAnim }]}>
-        <ThemedButton
-          name="bruce"
-          type="primary"
-          backgroundColor="#656565"
-          backgroundDarker="#252525"
-          textColor="#FAF7F0"
-          onPress={()=> {
-            router.navigate('/(auth)')
-          }}
-        >
-          Yeni Kullanıcıyım
-        </ThemedButton>
+      {!user && (
+        <>
+          <Animated.View style={[styles.buttonContainer, { opacity: fadeAnim }]}>
+            <ThemedButton
+              name="bruce"
+              type="primary"
+              backgroundColor="#656565"
+              backgroundDarker="#252525"
+              textColor="#FAF7F0"
+              onPress={()=> {
+                router.navigate('/(auth)')
+              }}
+            >
+              Yeni Kullanıcıyım
+            </ThemedButton>
 
-        <ThemedButton
-          name="bruce"
-          type="primary"
-          backgroundColor="#656565"
-          backgroundDarker="#252525"
-          textColor="#FAF7F0"
-          style={{ marginTop: 20 }}
-          onPress={()=> {
-            router.navigate('./(auth)/signIn')
-          }}
-        >
-          Zaten Bir Hesabım Var
-        </ThemedButton>
-      </Animated.View>
+            <ThemedButton
+              name="bruce"
+              type="primary"
+              backgroundColor="#656565"
+              backgroundDarker="#252525"
+              textColor="#FAF7F0"
+              style={{ marginTop: 20 }}
+              onPress={()=> {
+                router.navigate('./(auth)/signIn')
+              }}
+            >
+              Zaten Bir Hesabım Var
+            </ThemedButton>
+          </Animated.View>
+        </>
+      )}
+      {user && (
+        <>
+          <Animated.View style={[styles.buttonContainer, { opacity: fadeAnim }]}>
+            <ThemedButton
+              name="bruce"
+              type="primary"
+              backgroundColor="#656565"
+              backgroundDarker="#252525"
+              textColor="#FAF7F0"
+              onPress={()=> {
+                router.navigate('/(tabs)/home')
+              }}
+            >
+              Tekrar Hoş Geldiniz
+            </ThemedButton>
+            <ThemedButton
+              name="bruce"
+              type="primary"
+              backgroundColor="#656565"
+              backgroundDarker="#252525"
+              textColor="#FAF7F0"
+              style={{ marginTop: 20 }}
+              onPress={()=> {
+                signOut()
+                router.navigate('/startScreen')
+              }}
+            >
+              Çıkış Yap
+            </ThemedButton>
+          </Animated.View>
+        </>
+      )}
     </View>
   );
 }

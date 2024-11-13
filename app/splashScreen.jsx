@@ -41,7 +41,7 @@ export default function SplashScreen() {
             if (index === fullText.length) {
                 clearInterval(interval);
                 setTimeout(() => {
-                    router.replace('/startScreen'); // Yazı tamamlandığında Home ekranına yönlendirme
+                    router.replace('/(tabs)/home'); // Yazı tamamlandığında Home ekranına yönlendirme
                 }, 250);
             }
         }, 150); // Her bir harf için yazma hızı

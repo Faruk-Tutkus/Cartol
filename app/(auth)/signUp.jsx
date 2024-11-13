@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback  } from 'react';
 import { View, Text, Animated, TextInput, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, BackHandler  } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSignUp } from '@clerk/clerk-expo'
-import { useRouter } from 'expo-router'
+import { useRouter, useLocalSearchParams  } from 'expo-router'
 import { useOAuth } from '@clerk/clerk-expo'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
@@ -18,13 +18,16 @@ WebBrowser.maybeCompleteAuthSession()
 export default function SignUp() {
   const { isLoaded, signUp, setActive } = useSignUp()
   const router = useRouter()
+  const { name: UserName } = useLocalSearchParams()
   const [isFocusedEmail, setIsFocusedEmail] = useState(false);
+  const [isFocusedName, setIsFocusedName] = useState(false);
   const [isFocusedPassword, setIsFocusedPassword] = useState(false);
   const [isFocusedRePassword, setIsFocusedRePassword] = useState(false);
   const [isFocusedCode, setIsFocusedCode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
   const [email, setEmail] = useState('');
+  const [name, setName] = useState(UserName);
   const [password, setPassword] = useState('');
   const [rePassword, setRePassword] = useState('');
   const [code, setCode] = useState('')
@@ -50,6 +53,7 @@ export default function SignUp() {
       await signUp.create({
         emailAddress: email,
         password: password,
+        username: name
       })
 
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
@@ -94,7 +98,7 @@ export default function SignUp() {
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId })
-        router.replace('/home')
+        router.replace('/(tabs)/home')
       } else {
         console.error(JSON.stringify(completeSignUp, null, 2))
       }
@@ -146,7 +150,7 @@ export default function SignUp() {
   }, []);
 
 
-
+  const nameLabelAnim = useRef(new Animated.Value(0)).current;
   const emailLabelAnim = useRef(new Animated.Value(0)).current;
   const passwordLabelAnim = useRef(new Animated.Value(0)).current;
   const rePasswordLabelAnim = useRef(new Animated.Value(0)).current;
@@ -181,32 +185,42 @@ export default function SignUp() {
   const handleEmailChange = (text) => {
     setEmail(text);
   };
+  
+  const handleNameChange = (text) => {
+    setName(text);
+  };
 
   useEffect(() => {
+    Animated.timing(nameLabelAnim, {
+      toValue: isFocusedName || name ? -35 : -2,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+
     Animated.timing(emailLabelAnim, {
-      toValue: isFocusedEmail || email ? -35 : 0,
+      toValue: isFocusedEmail || email ? -35 : -2,
       duration: 200,
       useNativeDriver: true,
     }).start();
 
     Animated.timing(passwordLabelAnim, {
-      toValue: isFocusedPassword || password ? -35 : 0,
+      toValue: isFocusedPassword || password ? -35 : -2,
       duration: 200,
       useNativeDriver: true,
     }).start();
 
     Animated.timing(rePasswordLabelAnim, {
-      toValue: isFocusedRePassword || rePassword ? -35 : 0,
+      toValue: isFocusedRePassword || rePassword ? -35 : -2,
       duration: 200,
       useNativeDriver: true,
     }).start();
 
     Animated.timing(codeLabelAnim, {
-      toValue: isFocusedCode || code ? -35 : 0,
+      toValue: isFocusedCode || code ? -35 : -2,
       duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [isFocusedEmail, isFocusedPassword, isFocusedCode, isFocusedRePassword, email, password]);
+  }, [isFocusedEmail, isFocusedPassword, isFocusedName, isFocusedCode, isFocusedRePassword, email, password, name]);
 
   const animatedLabelStyle = (animation) => ({
     transform: [{ translateY: animation }],
@@ -344,8 +358,22 @@ export default function SignUp() {
           {!pendingVerification && (
             <>
               <View>
-                <View style={[styles.inputContainer]}>
-                  <Icon name="email" size={24} color="#FAF7F0" style={styles.icon} />
+                <View style={[styles.inputContainer, { marginTop: 20 }]}>
+                  <Icon name="account-circle" size={24} color="#FAF7F0" style={styles.icon} />
+                  <Animated.Text style={animatedLabelStyle(nameLabelAnim)}>Kullanıcı Adı</Animated.Text>
+                  <TextInput
+                    value={name}
+                    onChangeText={handleNameChange}
+                    onFocus={() => setIsFocusedName(true)}
+                    onBlur={() => setIsFocusedName(false)}
+                    autoCapitalize="none"
+                    keyboardType="default"
+                    cursorColor={'#FAF7F0'}
+                    style={styles.input}
+                  />
+                </View>
+                <View style={[styles.inputContainer, { marginTop: 20 }]}>
+                  <Icon name="email" size={24} color="#FAF7F0" style={[styles.icon]} />
                   <Animated.Text style={animatedLabelStyle(emailLabelAnim)}>E-mail</Animated.Text>
                   <TextInput
                     value={email}

@@ -57,13 +57,14 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: {backgroundColor : '#00000000'},
+          contentStyle: {backgroundColor : '#4A4947'},
         }}
       >
         <Stack.Screen name="index" options={{animation: 'fade'}}/>
         <Stack.Screen name="splashScreen"options={{animation: 'fade'}}/>
         <Stack.Screen name="startScreen" options={{animation: 'none'}}/>
         <Stack.Screen name="(auth)" options={{animation: 'slide_from_right'}}/>
+        <Stack.Screen name="(tabs)" options={{animation: 'slide_from_right'}}/>
       </Stack>
     </ClerkLoaded>
   </ClerkProvider>

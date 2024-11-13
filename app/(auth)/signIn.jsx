@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback  } from 'react';
-import { View, Text, Animated, TextInput, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView } from 'react-native';
-import { useSignIn } from '@clerk/clerk-expo'
+import { View, Text, Animated, TextInput, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, Alert } from 'react-native';
+import { useSignIn, useSignUp } from '@clerk/clerk-expo'
 import { useRouter } from 'expo-router'
 import { useOAuth } from '@clerk/clerk-expo'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -38,13 +38,13 @@ export default function SignIn() {
 
   useEffect(() => {
     Animated.timing(emailLabelAnim, {
-      toValue: isFocusedEmail || email ? -35 : 0,
+      toValue: isFocusedEmail || email ? -35 : -2,
       duration: 200,
       useNativeDriver: true,
     }).start();
 
     Animated.timing(passwordLabelAnim, {
-      toValue: isFocusedPassword || password ? -35 : 0,
+      toValue: isFocusedPassword || password ? -35 : -2,
       duration: 200,
       useNativeDriver: true,
     }).start();
@@ -65,6 +65,7 @@ export default function SignIn() {
     top: 20,
   });
   const { signIn, setActive, isLoaded } = useSignIn()
+  const { signUp } = useSignUp()
   const router = useRouter()
   const triggerShakeAndColor = () => {
     Animated.timing(colorValue, {
@@ -104,7 +105,7 @@ export default function SignIn() {
 
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId })
-        router.replace('/home')
+        router.replace('/(tabs)/home')
       } else {
 
         console.error(JSON.stringify(signInAttempt, null, 2))
@@ -145,15 +146,15 @@ export default function SignIn() {
         provider === 'google' ? startGoogleOAuthFlow :
         provider === 'facebook' ? startFacebookOAuthFlow :
         startAppleOAuthFlow;
-
       const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL('/home', { scheme: 'myapp' }),
+        redirectUrl: Linking.createURL('/home'),
       });
-
+      
       if (createdSessionId) {
-        setActive({ session: createdSessionId });
+        setActive({session: createdSessionId})
+        router.replace('/(tabs)/home')
       } else {
-        // Handle the case where additional steps are needed
+        
       }
     } catch (err) {
       Alert.alert("OAuth Error", `An error occurred during the OAuth process: ${err.message || err}`);
@@ -267,7 +268,7 @@ export default function SignIn() {
           <View>
             <Animated.View style={[styles.inputContainer, { opacity: fadeAnim, transform:[{translateX: shakePasswordAnim}] }]}>
               <Icon name="email" size={24} color="#FAF7F0" style={styles.icon} />
-              <Animated.Text style={animatedLabelStyle(emailLabelAnim)}>E-mail</Animated.Text>
+              <Animated.Text style={animatedLabelStyle(emailLabelAnim)}>E-mail - Kullanıcı Adı</Animated.Text>
               <TextInput
                 value={email}
                 onChangeText={handleEmailChange}
