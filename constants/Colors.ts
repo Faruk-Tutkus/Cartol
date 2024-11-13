@@ -6,5 +6,6 @@ export const Colors = {
     background: '#4A4947',
     buttonColor: '#FAF7F0',
     buttonTextColor: '#4A4947',
+    container: '#1A1A19'
   },
 };
