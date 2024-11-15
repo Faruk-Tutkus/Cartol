@@ -5,16 +5,14 @@ export default function SplashScreen() {
     const [displayText, setDisplayText] = useState('');
     const fullText = 'cartol';
 
-    // Animasyon değerleri
-    const fadeAnim = useRef(new Animated.Value(0)).current; // Arka plan için fade
-    const translateYAnim = useRef(new Animated.Value(-250)).current; // Resim için yukarıdan aşağıya animasyon
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const translateYAnim = useRef(new Animated.Value(-250)).current;
 
-    // Görsel ve arka plan rengi
+
     const image = require('./../assets/images/logo.png');
     const backgroundColor = '#4A4947';
 
     useEffect(() => {
-        // Arka plan rengi ve görsel animasyonu
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
@@ -28,7 +26,6 @@ export default function SplashScreen() {
                 useNativeDriver: true,
             }),
         ]).start(() => {
-            // Görsel animasyonu bittiğinde yazı animasyonuna başla
             animateText();
         });
     }, []);
@@ -41,10 +38,10 @@ export default function SplashScreen() {
             if (index === fullText.length) {
                 clearInterval(interval);
                 setTimeout(() => {
-                    router.replace('/(tabs)/home'); // Yazı tamamlandığında Home ekranına yönlendirme
+                    router.replace('/home');
                 }, 250);
             }
-        }, 150); // Her bir harf için yazma hızı
+        }, 150);
     };
 
     return (

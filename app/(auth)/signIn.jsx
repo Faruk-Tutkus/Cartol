@@ -62,18 +62,17 @@ export default function SignIn() {
     color: '#FAF7F0',
     position: 'absolute',
     left: 45,
-    top: 20,
   });
   const { signIn, setActive, isLoaded } = useSignIn()
   const { signUp } = useSignUp()
   const router = useRouter()
   const triggerShakeAndColor = () => {
     Animated.timing(colorValue, {
-      toValue: 1, // Hedef değer
+      toValue: 1,
       duration: 500,
-      useNativeDriver: true, // Renk animasyonları için false kullanmalıyız
+      useNativeDriver: true,
     }).start(() => {
-      // Animasyon bitince geri döndürmek için
+
       Animated.timing(colorValue, {
         toValue: 0,
         duration: 250,

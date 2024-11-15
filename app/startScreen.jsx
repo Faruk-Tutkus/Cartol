@@ -43,6 +43,7 @@ export default function StartScreen() {
               backgroundColor="#656565"
               backgroundDarker="#252525"
               textColor="#FAF7F0"
+              width={250}
               onPress={()=> {
                 router.navigate('/(auth)')
               }}
@@ -57,6 +58,7 @@ export default function StartScreen() {
               backgroundDarker="#252525"
               textColor="#FAF7F0"
               style={{ marginTop: 20 }}
+              width={250}
               onPress={()=> {
                 router.navigate('./(auth)/signIn')
               }}
@@ -75,6 +77,7 @@ export default function StartScreen() {
               backgroundColor="#656565"
               backgroundDarker="#252525"
               textColor="#FAF7F0"
+              width={250}
               onPress={()=> {
                 router.navigate('/(tabs)/home')
               }}
@@ -88,6 +91,7 @@ export default function StartScreen() {
               backgroundDarker="#252525"
               textColor="#FAF7F0"
               style={{ marginTop: 20 }}
+              width={250}
               onPress={()=> {
                 signOut()
                 router.navigate('/startScreen')

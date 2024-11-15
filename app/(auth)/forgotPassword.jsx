@@ -248,7 +248,7 @@ export default function ForgotPassword() {
         <View>
             {!successfulCreation && (
                 <>
-                    <View>
+                    <View style={{width: '80%'}}>
                         <Text style={{fontSize: 15, color: '#FAF7F0', textAlign: 'center'}}>
                             Sıfırlama kodu için lütfen geçerli e-posta adresinizi girin
                         </Text>
@@ -280,7 +280,7 @@ export default function ForgotPassword() {
             )}
             {successfulCreation && (
                 <>
-                    <View>
+                    <View style={{width: '80%'}}>
                         <Text style={{fontSize: 15, color: '#FAF7F0', textAlign: 'center'}}>
                             {email} adresine kodu gönderdik
                         </Text>

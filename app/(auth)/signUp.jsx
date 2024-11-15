@@ -140,8 +140,9 @@ export default function SignUp() {
 
       if (createdSessionId) {
         setActive({ session: createdSessionId });
+        router.replace('/(tabs)/home')
       } else {
-        // Handle the case where additional steps are needed
+        //router.replace('/(tabs)/home')
       }
     } catch (err) {
       Alert.alert("OAuth Error", `An error occurred during the OAuth process: ${err.message || err}`);
@@ -228,7 +229,7 @@ export default function SignUp() {
     color: '#FAF7F0',
     position: 'absolute',
     left: 45,
-    top: 20,
+
   });
   const styles = StyleSheet.create({
     container: {
