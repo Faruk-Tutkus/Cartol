@@ -38,7 +38,7 @@ export default function SplashScreen() {
             if (index === fullText.length) {
                 clearInterval(interval);
                 setTimeout(() => {
-                    router.replace('/home');
+                    router.replace('/(tabs)/home');
                 }, 250);
             }
         }, 150);

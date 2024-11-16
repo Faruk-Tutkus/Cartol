@@ -140,7 +140,7 @@ export default function SignUp() {
 
       if (createdSessionId) {
         setActive({ session: createdSessionId });
-        router.replace('/(tabs)/home')
+        //router.replace('/(tabs)/home')
       } else {
         //router.replace('/(tabs)/home')
       }
