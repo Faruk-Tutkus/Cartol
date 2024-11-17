@@ -1,16 +1,39 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Colors } from './../../constants/Colors'
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, Image, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Animated, { interpolate, LayoutAnimationConfig, useAnimatedStyle, useSharedValue, withSpring, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
 import { useIsFocused } from '@react-navigation/native';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import * as Progress from 'react-native-progress';
 import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/clerk-expo'
+import { LineChart } from 'react-native-chart-kit';
 export default function Home() {
   const user = useUser()
   const isFocused = useIsFocused();
   const scale = useSharedValue(0);
+  const screenWidth = Dimensions.get("window").width;
+  const scaleMeals = {
+    breakfast: useSharedValue(125),
+    lunch: useSharedValue(125),
+    dinner: useSharedValue(125),
+    water: useSharedValue(125),
+  }
+  
+  const [focusStates, setFocusStates] = useState({
+    water: false,
+    breakfast: false,
+    lunch: false,
+    dinner: false,
+  });
+
+  const handlePress = (key) => {
+    setFocusStates((prev) => ({
+      ...prev,
+      [key]: !prev[key], // Toggle odak durumu
+    }));
+
+  };
 
   useEffect(() => {
     if (isFocused) {
@@ -18,14 +41,39 @@ export default function Home() {
     } else {
       scale.value = 0;
     }
-  }, [isFocused]);
+    
+    if (focusStates.breakfast) {
+      scaleMeals.breakfast.value = withSpring(200, {duration: 500, damping: 15});
+    } else {
+      scaleMeals.breakfast.value = withSpring(125, {duration: 500, damping: 15});
+    }
 
+    if (focusStates.lunch) {
+      scaleMeals.lunch.value = withSpring(200, {duration: 500, damping: 15});
+    } else {
+      scaleMeals.lunch.value = withSpring(125, {duration: 500, damping: 15});
+    }
+
+    if (focusStates.dinner) {
+      scaleMeals.dinner.value = withSpring(200, {duration: 500, damping: 15});
+    } else {
+      scaleMeals.dinner.value = withSpring(125, {duration: 500, damping: 15});
+    }
+
+    if (focusStates.water) {
+      scaleMeals.water.value = withSpring(200, {duration: 500, damping: 15});
+    } else {
+      scaleMeals.water.value = withSpring(125, {duration: 500, damping: 15});
+    }
+    
+  }, [isFocused, focusStates]);
   const animatedStyle = useAnimatedStyle(() => {
     const height = scale.value
     return {
       height
     };
   });
+
   return (
     <SafeAreaView style={[styles.container, { paddingTop: 25}]}>
       <View style={styles.header}>
@@ -118,42 +166,74 @@ export default function Home() {
             </View>
             <Text style={styles.nutrient}>0/410 gr</Text>
           </View>
-        </View>          
+          </View>          
         </Animated.View>
-        <Animated.View style={[styles.waterContainer]}>
-          <Image source={require('../../assets/images/water.png')} resizeMode='center' style={{width:50, height:50, borderRadius:25, position:'absolute', top: -15}} />
-          <View style={{flexDirection:'row'}}>
-            <Text style={styles.waterText}>Su İhtiyacı</Text>
-            <Text style={styles.waterML}>0 / 210 ml</Text>
-          </View>
-          <Progress.Bar progress={0.3} width={300} color='#4793AF' unfilledColor='#4793AF33' height={20} borderWidth={0} borderRadius={10} style={{marginHorizontal:10, marginVertical:7, alignSelf:'center'}}/>
-        </Animated.View>
-        <Animated.View style={[styles.mealContainer]}>
-          <Image source={require('../../assets/images/breakfast.png')} resizeMode='center' style={{width:50, height:50, borderRadius:25, position:'absolute', top: -15}} />
+        <Pressable  onPress={()=> handlePress('water')}>
+        <Animated.View style={[styles.mealContainer, { height: scaleMeals.water }]}>
+          <Image source={require('../../assets/images/water.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
           <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
             <View style={{alignSelf:'flex-start',  paddingHorizontal: 15}}>
-              <Text style={[styles.calorieText,]}>Sabah Kahvaltısı</Text>
+              <Text style={[styles.calorieText]}>Su İhtiyacı</Text>
+            </View>
+            <View style={{alignSelf:'flex-end', paddingHorizontal: 15}}>
+              <Text style={[styles.calorieText]}>0 ml</Text>
+            </View>
+          </View>
+          <Progress.Bar progress={0.3} width={300} color='#4793AF' unfilledColor='#4793AF33' height={20} borderWidth={0} borderRadius={10} style={{marginHorizontal:10, marginVertical:7, alignSelf:'center'}}/>
+          {focusStates.water && (
+            <View style={{ marginTop: 10, alignSelf: 'center' }}>
+             <TouchableOpacity style={styles.addFoodButton} onPress={()=> {console.log('clicked')}}>
+              <Text style={styles.addFoodButtonText}>Su Ekle</Text>
+            </TouchableOpacity>
+           </View>
+          )}
+        </Animated.View>
+        </Pressable >
+        <Pressable  onPress={()=> handlePress('breakfast')}>
+        <Animated.View style={[styles.mealContainer, { height: scaleMeals.breakfast }]}>
+          <Image source={require('../../assets/images/breakfast.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
+          <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
+            <View style={{alignSelf:'flex-start',  paddingHorizontal: 15}}>
+              <Text style={[styles.calorieText]}>Sabah Kahvaltısı</Text>
             </View>
             <View style={{alignSelf:'flex-end', paddingHorizontal: 15}}>
               <Text style={[styles.calorieText]}>0 KCAL</Text>
             </View>
           </View>
           <Progress.Bar progress={0.3} width={300} color='#4793AF' unfilledColor='#4793AF33' height={20} borderWidth={0} borderRadius={10} style={{marginHorizontal:10, marginVertical:7, alignSelf:'center'}}/>
+          {focusStates.breakfast && (
+            <View style={{ marginTop: 10, alignSelf: 'center' }}>
+             <TouchableOpacity style={styles.addFoodButton} onPress={()=> {console.log('clicked')}}>
+              <Text style={styles.addFoodButtonText}>Yemek Ekle</Text>
+            </TouchableOpacity>
+           </View>
+          )}
         </Animated.View>
-        <Animated.View style={[styles.mealContainer]}>
-          <Image source={require('../../assets/images/lunch.png')} resizeMode='center' style={{width:50, height:50, borderRadius:25, position:'absolute', top: -15}} />
+        </Pressable >
+        <Pressable  onPress={()=> handlePress('lunch')}>
+        <Animated.View style={[styles.mealContainer, { height: scaleMeals.lunch }]}>
+          <Image source={require('../../assets/images/lunch.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
           <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
             <View style={{alignSelf:'flex-start',  paddingHorizontal: 15}}>
-              <Text style={[styles.calorieText,]}>Öğle Yemeği</Text>
+              <Text style={[styles.calorieText]}>Öğle Yemeği</Text>
             </View>
             <View style={{alignSelf:'flex-end', paddingHorizontal: 15}}>
               <Text style={[styles.calorieText]}>0 KCAL</Text>
             </View>
           </View>
           <Progress.Bar progress={0.3} width={300} color='#4793AF' unfilledColor='#4793AF33' height={20} borderWidth={0} borderRadius={10} style={{marginHorizontal:10, marginVertical:7, alignSelf:'center'}}/>
+          {focusStates.lunch  && (
+            <View style={{ marginTop: 10, alignSelf: 'center' }}>
+             <TouchableOpacity style={styles.addFoodButton} onPress={()=> {console.log('clicked')}}>
+              <Text style={styles.addFoodButtonText}>Yemek Ekle</Text>
+            </TouchableOpacity>
+           </View>
+          )}
         </Animated.View>
-        <Animated.View style={[styles.mealContainer, { marginBottom:250 }]}>
-          <Image source={require('../../assets/images/dinner.png')} resizeMode='center' style={{width:50, height:50, borderRadius:25, position:'absolute', top: -15}} />
+        </Pressable >
+        <Pressable  onPress={()=> handlePress('dinner')}>
+        <Animated.View style={[styles.mealContainer, { height: scaleMeals.dinner }]}>
+          <Image source={require('../../assets/images/dinner.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
           <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
             <View style={{alignSelf:'flex-start',  paddingHorizontal: 15}}>
               <Text style={[styles.calorieText]}>Akşam Yemeği</Text>
@@ -163,7 +243,33 @@ export default function Home() {
             </View>
           </View>
           <Progress.Bar progress={0.3} width={300} color='#4793AF' unfilledColor='#4793AF33' height={20} borderWidth={0} borderRadius={10} style={{marginHorizontal:10, marginVertical:7, alignSelf:'center'}}/>
+          {focusStates.dinner && (
+            <View style={{ marginTop: 10, alignSelf: 'center' }}>
+             <TouchableOpacity style={styles.addFoodButton} onPress={()=> {console.log('clicked')}}>
+              <Text style={styles.addFoodButtonText}>Yemek Ekle</Text>
+            </TouchableOpacity>
+           </View>
+          )}
         </Animated.View>
+        </Pressable >
+        <Pressable  onPress={()=> handlePress('dinner')} >
+        <Animated.View style={[styles.mealContainer, { marginBottom:250, height: scaleMeals.dinner }]}>
+          <Image source={require('../../assets/images/weighing machine.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
+          <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
+            <View style={{alignSelf:'flex-start',  paddingHorizontal: 15}}>
+              <Text style={[styles.calorieText]}>Kilo ve Boy Takibi</Text>
+            </View>
+            <LineChart
+              data={data}
+              width={screenWidth}
+              height={256}
+              verticalLabelRotation={30}
+              chartConfig={chartConfig}
+              bezier
+            />
+           </View>
+        </Animated.View>
+        </Pressable >
       </ScrollView>
     </SafeAreaView>
 
@@ -230,49 +336,36 @@ const styles = StyleSheet.create({
     textAlign:'center',
     fontWeight:'bold'
   },
-  waterContainer: {
-    backgroundColor: Colors.dark.container,
-    width:'95%',
-    height: 125,
-    marginVertical:25,
-    borderRadius:15,
-    flexDirection:'column',
-    paddingTop:20,
-    justifyContent:'center'
-  },
-  waterText: {
-    fontSize:25,
-    color:'#D8D2C2',
-    fontWeight:'bold',
-    paddingHorizontal: 10,
-    alignContent:'flex-start',
-    marginHorizontal:10
-  },
-  waterML: {
-    fontSize:25,
-    color:'#D8D2C2',
-    fontWeight:'bold',
-    paddingHorizontal: 10,
-    marginHorizontal:30
-  },
   mealContainer: {
     backgroundColor: Colors.dark.container,
     width:'95%',
     height: 125,
-    marginVertical:25,
+    marginVertical:20,
     borderRadius:15,
     flexDirection:'column',
     paddingTop:20,
-    justifyContent:'center'
-  },
-  mealText: {
-    fontSize:20,
-    color:'#D8D2C2',
-    fontWeight:'bold',
+    justifyContent:'center',
   },
   calorieText: {
     fontSize:20,
     color:'#D8D2C2',
     fontWeight:'bold',
-  }
+  },
+  addFoodButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent:'center',
+    backgroundColor: '#FAF7F0',
+    borderRadius: 10,
+    width: 300,
+    height: 50,
+    marginTop: 15,
+    paddingHorizontal: 10,
+  },
+  addFoodButtonText: {
+    color: '#4A4947',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign:'center'
+  },
 });

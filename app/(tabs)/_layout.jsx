@@ -13,9 +13,9 @@ export default function TabLayout() {
       tabBar={props => <TabBar {...props} />}
       >
         <Tabs.Screen name='home' options={{ title: 'Home'}}/>
-        <Tabs.Screen name='recipe' options={{ title: 'Recipe'}}/>
+        <Tabs.Screen name='recipe' options={{ title: 'Tarfiler'}}/>
         <Tabs.Screen name='ai' options={{ title: 'AI'}}/>
-        <Tabs.Screen name='exercise' options={{ title: 'Exercise'}}/>
+        <Tabs.Screen name='exercise' options={{ title: 'Egzersiz'}}/>
       </Tabs>
   );
 }
