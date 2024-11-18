@@ -8,6 +8,7 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import * as Progress from 'react-native-progress';
 import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/clerk-expo'
 import { LineChart } from 'react-native-chart-kit';
+import { VictoryChart, VictoryLine, VictoryTheme, VictoryAxis } from 'victory';
 export default function Home() {
   const user = useUser()
   const isFocused = useIsFocused();
@@ -18,6 +19,8 @@ export default function Home() {
     lunch: useSharedValue(125),
     dinner: useSharedValue(125),
     water: useSharedValue(125),
+    kilo: useSharedValue(125),
+    boy: useSharedValue(125),
   }
   
   const [focusStates, setFocusStates] = useState({
@@ -25,6 +28,8 @@ export default function Home() {
     breakfast: false,
     lunch: false,
     dinner: false,
+    kilo: false,
+    boy: false
   });
 
   const handlePress = (key) => {
@@ -65,6 +70,18 @@ export default function Home() {
     } else {
       scaleMeals.water.value = withSpring(125, {duration: 500, damping: 15});
     }
+
+    if (focusStates.kilo) {
+      scaleMeals.kilo.value = withSpring(350, {duration: 500, damping: 15});
+    } else {
+      scaleMeals.kilo.value = withSpring(125, {duration: 500, damping: 15});
+    }
+
+    if (focusStates.boy) {
+      scaleMeals.boy.value = withSpring(350, {duration: 500, damping: 15});
+    } else {
+      scaleMeals.boy.value = withSpring(125, {duration: 500, damping: 15});
+    }
     
   }, [isFocused, focusStates]);
   const animatedStyle = useAnimatedStyle(() => {
@@ -73,7 +90,6 @@ export default function Home() {
       height
     };
   });
-
   return (
     <SafeAreaView style={[styles.container, { paddingTop: 25}]}>
       <View style={styles.header}>
@@ -168,7 +184,7 @@ export default function Home() {
           </View>
           </View>          
         </Animated.View>
-        <Pressable  onPress={()=> handlePress('water')}>
+        <Pressable  onPress={()=> handlePress('water')} style={{alignItems:'center', width:'100%'}}>
         <Animated.View style={[styles.mealContainer, { height: scaleMeals.water }]}>
           <Image source={require('../../assets/images/water.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
           <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
@@ -189,7 +205,7 @@ export default function Home() {
           )}
         </Animated.View>
         </Pressable >
-        <Pressable  onPress={()=> handlePress('breakfast')}>
+        <Pressable  onPress={()=> handlePress('breakfast')} style={{alignItems:'center', width:'100%'}}>
         <Animated.View style={[styles.mealContainer, { height: scaleMeals.breakfast }]}>
           <Image source={require('../../assets/images/breakfast.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
           <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
@@ -210,7 +226,7 @@ export default function Home() {
           )}
         </Animated.View>
         </Pressable >
-        <Pressable  onPress={()=> handlePress('lunch')}>
+        <Pressable  onPress={()=> handlePress('lunch')} style={{alignItems:'center', width:'100%'}}>
         <Animated.View style={[styles.mealContainer, { height: scaleMeals.lunch }]}>
           <Image source={require('../../assets/images/lunch.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
           <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
@@ -231,7 +247,7 @@ export default function Home() {
           )}
         </Animated.View>
         </Pressable >
-        <Pressable  onPress={()=> handlePress('dinner')}>
+        <Pressable  onPress={()=> handlePress('dinner')} style={{alignItems:'center', width:'100%'}}>
         <Animated.View style={[styles.mealContainer, { height: scaleMeals.dinner }]}>
           <Image source={require('../../assets/images/dinner.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
           <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
@@ -252,24 +268,144 @@ export default function Home() {
           )}
         </Animated.View>
         </Pressable >
-        <Pressable  onPress={()=> handlePress('dinner')} >
-        <Animated.View style={[styles.mealContainer, { marginBottom:250, height: scaleMeals.dinner }]}>
+        <Pressable onPress={()=> handlePress('boy')} style={{alignItems:'center', width:'100%'}}>
+        <Animated.View style={[styles.mealContainer, { height: scaleMeals.boy }]}>
           <Image source={require('../../assets/images/weighing machine.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
-          <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
-            <View style={{alignSelf:'flex-start',  paddingHorizontal: 15}}>
-              <Text style={[styles.calorieText]}>Kilo ve Boy Takibi</Text>
+          <View style={{flexDirection:'column', justifyContent:'space-between', width:'95%'}}>
+            <View style={{alignSelf:'center',  paddingHorizontal: 15}}>
+              <Text style={[styles.calorieText, { textAlign:'center' }]}>Boy Takibi</Text>
             </View>
-            <LineChart
-              data={data}
-              width={screenWidth}
-              height={256}
-              verticalLabelRotation={30}
-              chartConfig={chartConfig}
-              bezier
-            />
+            <View style={{justifyContent: 'center', alignItems: 'center', paddingVertical: 10, marginHorizontal: 15 }}>
+              {focusStates.boy && (
+                <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={{ flexGrow: 1 }}
+                scrollEventThrottle={16}
+              >
+                <LineChart
+                  data={{
+                    labels: [
+                      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 
+                      'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 
+                      'Ekim', 'Kasım', 'Aralık'
+                    ],
+                    datasets: [
+                      {
+                        data: [
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                        ],
+                      },
+                    ],
+                  }}
+                  width={screenWidth * 2} // Yatay kaydırmayı sağlamak için genişlik artırıldı
+                  height={250}
+                  yAxisSuffix="cm"
+                  chartConfig={{
+                    backgroundGradientFrom: '#2F2F2F', // Koyu bir arka plan
+                    backgroundGradientTo: '#B17457', // Gradyan bitiş rengi
+                    decimalPlaces: 2, // Sayıların ondalık basamağı
+                    color: (opacity = 1) => `rgba(216, 210, 194, ${opacity})`, // Grafikteki çizgilerin rengi
+                    labelColor: (opacity = 1) => `rgba(216, 210, 194, ${opacity})`, // Etiketlerin rengi (eksende görünenler)
+                    propsForLabels: {
+                      fontSize: 12, // Etiket yazı boyutu
+                      fontWeight: 'bold', // Etiket yazı kalınlığı
+                    },
+                    style: {
+                      borderRadius: 16,
+                    },
+                  }}
+                  bezier
+                  style={{
+                    borderRadius: 16,
+                  }}
+                />
+              </ScrollView>
+              )}
+            </View>
            </View>
         </Animated.View>
-        </Pressable >
+        </Pressable>
+        <Pressable onPress={()=> handlePress('kilo')} style={{alignItems:'center', width:'100%'}}>
+        <Animated.View style={[styles.mealContainer, { marginBottom:125, height: scaleMeals.kilo}]}>
+          <Image source={require('../../assets/images/weighing machine.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
+          <View style={{flexDirection:'column', justifyContent:'space-between', width:'100%'}}>
+            <View style={{alignSelf:'center',  paddingHorizontal: 15}}>
+              <Text style={[styles.calorieText, {  }]}>Kilo Takibi</Text>
+            </View>
+            <View style={{justifyContent: 'center', alignItems: 'center', paddingVertical: 10, marginHorizontal: 15 }}>
+              {focusStates.kilo && (
+                <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={{ flexGrow: 1 }}
+                scrollEventThrottle={16}
+              >
+                <LineChart
+                  data={{
+                    labels: [
+                      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 
+                      'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 
+                      'Ekim', 'Kasım', 'Aralık'
+                    ],
+                    datasets: [
+                      {
+                        data: [
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                          Math.random() * 100,
+                        ],
+                      },
+                    ],
+                  }}
+                  width={screenWidth * 2} // Yatay kaydırmayı sağlamak için genişlik artırıldı
+                  height={250}
+                  yAxisSuffix="kg"
+                  chartConfig={{
+                    backgroundGradientFrom: '#2F2F2F', // Koyu bir arka plan
+                    backgroundGradientTo: '#B17457', // Gradyan bitiş rengi
+                    decimalPlaces: 2, // Sayıların ondalık basamağı
+                    color: (opacity = 1) => `rgba(216, 210, 194, ${opacity})`, // Grafikteki çizgilerin rengi
+                    labelColor: (opacity = 1) => `rgba(216, 210, 194, ${opacity})`, // Etiketlerin rengi (eksende görünenler)
+                    propsForLabels: {
+                      fontSize: 12, // Etiket yazı boyutu
+                      fontWeight: 'bold', // Etiket yazı kalınlığı
+                    },
+                    style: {
+                      borderRadius: 16,
+                    },
+                  }}
+                  bezier
+                  style={{
+                    borderRadius: 16,
+                  }}
+                />
+              </ScrollView>
+              )}
+            </View>
+           </View>
+        </Animated.View>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
 
@@ -339,7 +475,7 @@ const styles = StyleSheet.create({
   mealContainer: {
     backgroundColor: Colors.dark.container,
     width:'95%',
-    height: 125,
+    height: 350,
     marginVertical:20,
     borderRadius:15,
     flexDirection:'column',
