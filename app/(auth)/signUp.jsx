@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState, useCallback  } from 'react';
-import { View, Text, Animated, TextInput, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, BackHandler  } from 'react-native';
+import { View, Text, Animated, TextInput, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, BackHandler, Alert  } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useSignUp } from '@clerk/clerk-expo'
+import { SignedOut, useSignUp } from '@clerk/clerk-expo'
 import { useRouter, useLocalSearchParams  } from 'expo-router'
-import { useOAuth } from '@clerk/clerk-expo'
+import { useOAuth, useAuth, useUser } from '@clerk/clerk-expo'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
+import { doc, setDoc } from "firebase/firestore";
+import { db } from '../../config/FirebaseConfig'
+
 export const useWarmUpBrowser = () => {
   React.useEffect(() => {
     void WebBrowser.warmUpAsync()
@@ -16,9 +19,13 @@ export const useWarmUpBrowser = () => {
 }
 WebBrowser.maybeCompleteAuthSession()
 export default function SignUp() {
+  const { userId, isSignedIn } = useAuth(); // setActive sonrası değerleri tekrar al
+  const { user } = useUser();
+
+  const { signOut } = useAuth()
   const { isLoaded, signUp, setActive } = useSignUp()
   const router = useRouter()
-  const { name: UserName } = useLocalSearchParams()
+  const { name: UserName, height: height, weight: weight, gender:gender, weightGoal:weightGoal, exerciseGoal:exerciseGoal } = useLocalSearchParams()
   const [isFocusedEmail, setIsFocusedEmail] = useState(false);
   const [isFocusedName, setIsFocusedName] = useState(false);
   const [isFocusedPassword, setIsFocusedPassword] = useState(false);
@@ -27,13 +34,37 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
   const [email, setEmail] = useState('');
-  const [name, setName] = useState(UserName);
   const [password, setPassword] = useState('');
   const [rePassword, setRePassword] = useState('');
   const [code, setCode] = useState('')
   const [pendingVerification, setPendingVerification] = useState(false)
   const [message, setMessage] = useState('')
   const [textSize, setTextSize] = useState(0)
+  const [name, setName] = useState(UserName)
+
+
+  const userData = {
+    userName: UserName || 'Kullanıcı',
+    height: height,
+    weight: weight,
+    gender: gender,
+    weightGoal: weightGoal,
+    exerciseGoal: exerciseGoal,
+  };
+
+  
+  const addUserData = async (uid, userData) => {
+    try {
+      // UID'yi belge kimliği olarak kullan
+      await setDoc(doc(db, 'users', uid), userData);
+      console.log('Kullanıcı verileri başarıyla kaydedildi.');
+    } catch (error) {
+      console.error('Veri kaydedilirken hata oluştu:', error);
+      signOut()
+      router.replace('/(auth)/newUser')
+    }
+  };
+
   const onSignUpPress = async () => {
     if (password != rePassword){
       setTextSize(17)
@@ -53,7 +84,7 @@ export default function SignUp() {
       await signUp.create({
         emailAddress: email,
         password: password,
-        username: name
+        firstName: name
       })
 
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
@@ -98,6 +129,7 @@ export default function SignUp() {
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId })
+        addUserData(userData);
         router.replace('/(tabs)/home')
       } else {
         console.error(JSON.stringify(completeSignUp, null, 2))
@@ -134,21 +166,35 @@ export default function SignUp() {
         provider === 'facebook' ? startFacebookOAuthFlow :
         startAppleOAuthFlow;
 
-      const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL('/home', { scheme: 'myapp' }),
+      const { createdSessionId, signUp, setActive, authSessionResult } = await startOAuthFlow({
+        redirectUrl: Linking.createURL('/signUp', { scheme: 'myapp' }),
       });
 
       if (createdSessionId) {
-        setActive({ session: createdSessionId });
-        //router.replace('/(tabs)/home')
-      } else {
-        //router.replace('/(tabs)/home')
+        await setActive({ session: createdSessionId })
+        console.log(signUp.createdUserId)
+        const userID = signUp.createdUserId.replace('_', '')
+        addUserData(userID,userData)
+        router.replace('/(tabs)/home');
       }
     } catch (err) {
+      router.replace('/(auth)/newUser');
+      signOut()
+      try {
+        if (user) {
+          await user.delete();
+          Alert.alert("Account Deleted", "Your account has been successfully deleted.");
+        } else {
+          Alert.alert("Error", "No user found.");
+        }
+      } catch (error) {
+        console.error("Error deleting account:", error);
+        Alert.alert("Error", "There was an issue deleting your account.");
+      }
       Alert.alert("OAuth Error", `An error occurred during the OAuth process: ${err.message || err}`);
       console.error("OAuth error", err);
     }
-  }, []);
+  }, [isSignedIn, userId, setActive]);
 
 
   const nameLabelAnim = useRef(new Animated.Value(0)).current;
