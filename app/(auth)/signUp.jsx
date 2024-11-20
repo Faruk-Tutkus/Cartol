@@ -6,7 +6,7 @@ import { useRouter, useLocalSearchParams  } from 'expo-router'
 import { useOAuth, useAuth, useUser } from '@clerk/clerk-expo'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { db } from '../../config/FirebaseConfig'
 
 export const useWarmUpBrowser = () => {
@@ -21,11 +21,11 @@ WebBrowser.maybeCompleteAuthSession()
 export default function SignUp() {
   const { userId, isSignedIn } = useAuth(); // setActive sonrası değerleri tekrar al
   const { user } = useUser();
-
+  
   const { signOut } = useAuth()
   const { isLoaded, signUp, setActive } = useSignUp()
   const router = useRouter()
-  const { name: UserName, height: height, weight: weight, gender:gender, weightGoal:weightGoal, exerciseGoal:exerciseGoal } = useLocalSearchParams()
+  const { name: UserName, height: height, weight: weight, gender:gender, weightGoal:weightGoal, exerciseGoal:exerciseGoal, age:age } = useLocalSearchParams()
   const [isFocusedEmail, setIsFocusedEmail] = useState(false);
   const [isFocusedName, setIsFocusedName] = useState(false);
   const [isFocusedPassword, setIsFocusedPassword] = useState(false);
@@ -42,14 +42,72 @@ export default function SignUp() {
   const [textSize, setTextSize] = useState(0)
   const [name, setName] = useState(UserName)
 
+  const weightGoalFoo = ()=> {
+    if (weightGoal == 'Kilo Almak İstiyorum') {
+      return 0
+    }
+    else if (weightGoal == 'Kilo Vermek İstiyorum'){
+      return 1
+    }
+    else
+      return 2
+  }
 
+  const exerciseGoalFoo = ()=> {
+    if (exerciseGoal == 'Hiç Spor Yapmam') {
+      return 1.2
+    }
+    else if (exerciseGoal == 'Haftanın 1 Günü Spor Yaparım'){
+      return 1.375
+    }
+    else if (exerciseGoal == 'Haftanın 2-3 Günü Spor Yaparım'){
+      return 1.525
+    }
+    else
+      return 1.9
+
+  }
+
+  const calorieGoal = ()=> {
+    if (gender == 'man') {
+      if (weightGoalFoo() == 0) {
+        return (10 * weight + 6.25 * height - 5 * age + 5) * exerciseGoalFoo() + 500
+      }
+      else if (weightGoalFoo() == 1){
+        return (10 * weight + 6.25 * height - 5 * age + 5) * exerciseGoalFoo() - 500
+      }
+      else
+        return (10 * weight + 6.25 * height - 5 * age + 5) * exerciseGoalFoo()
+    }
+    else {
+      if (weightGoalFoo() == 0) {
+        return (10 * weight + 6.25 * height - 5 * age - 161) * exerciseGoalFoo() + 500
+      }
+      else if (weightGoalFoo() == 1){
+        return (10 * weight + 6.25 * height - 5 * age - 161) * exerciseGoalFoo() - 500
+      }
+      else
+        return (10 * weight + 6.25 * height - 5 * age - 161) * exerciseGoalFoo()
+    }
+  }
+  console.log(exerciseGoalFoo(), weight, height, age)
   const userData = {
-    userName: UserName || 'Kullanıcı',
-    height: height,
-    weight: weight,
-    gender: gender,
-    weightGoal: weightGoal,
-    exerciseGoal: exerciseGoal,
+    userName: name || 'Kullanıcı',
+    height: height || '180',
+    weight: weight || '70',
+    age: age || 22,
+    gender: gender || 'man',
+    weightGoal: weightGoalFoo() || '0',
+    exerciseGoal: exerciseGoalFoo() || '0',
+    calorieTaken: 0,
+    calorieGiven: 0,
+    calorieGoal: calorieGoal() || 2500, 
+    carbohGoal: 500,
+    proteinGoal: 500,
+    fatGoal: 500,
+    carboh: 0,
+    protein: 0,
+    fat: 0
   };
 
   
@@ -61,7 +119,7 @@ export default function SignUp() {
     } catch (error) {
       console.error('Veri kaydedilirken hata oluştu:', error);
       signOut()
-      router.replace('/(auth)/newUser')
+      router.replace({ pathname: "/(auth)/signUp", params: { name, height, weight, gender, weightGoal, exerciseGoal } });
     }
   };
 
@@ -129,10 +187,11 @@ export default function SignUp() {
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId })
-        addUserData(userData);
+        addUserData(userID,userData)
         router.replace('/(tabs)/home')
       } else {
         console.error(JSON.stringify(completeSignUp, null, 2))
+        router.replace({ pathname: "/(auth)/signUp", params: { name, height, weight, gender, weightGoal, exerciseGoal } });
       }
     } catch (err) {
       setMessage('')
@@ -173,24 +232,18 @@ export default function SignUp() {
       if (createdSessionId) {
         await setActive({ session: createdSessionId })
         console.log(signUp.createdUserId)
-        const userID = signUp.createdUserId.replace('_', '')
-        addUserData(userID,userData)
-        router.replace('/(tabs)/home');
+        if (signUp.status === 'complete') {
+          const userID = signUp.createdUserId
+          addUserData(userID,userData)
+          router.replace('/(tabs)/home');
+        }
+        else
+          router.replace({ pathname: "/(auth)/signUp", params: { name, height, weight, gender, weightGoal, exerciseGoal } });
+
       }
     } catch (err) {
-      router.replace('/(auth)/newUser');
+      router.replace({ pathname: "/(auth)/signUp", params: { name, height, weight, gender, weightGoal, exerciseGoal } });
       signOut()
-      try {
-        if (user) {
-          await user.delete();
-          Alert.alert("Account Deleted", "Your account has been successfully deleted.");
-        } else {
-          Alert.alert("Error", "No user found.");
-        }
-      } catch (error) {
-        console.error("Error deleting account:", error);
-        Alert.alert("Error", "There was an issue deleting your account.");
-      }
       Alert.alert("OAuth Error", `An error occurred during the OAuth process: ${err.message || err}`);
       console.error("OAuth error", err);
     }

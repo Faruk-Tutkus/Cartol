@@ -9,6 +9,7 @@ export default function NewUser() {
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [gender, setGender] = useState('');
+  const [age, setAge] = useState('');
   const [weightGoal, setWeightGoal] = useState(''); // weight goal state
   const [exerciseGoal, setExerciseGoal] = useState(''); // weight goal state
   const scrollViewRef = useRef(null);
@@ -19,12 +20,14 @@ export default function NewUser() {
       (currentPage === 0 && name) ||
       (currentPage === 1 && height) ||
       (currentPage === 2 && weight) ||
-      (currentPage === 3 && gender) ||
-      (currentPage === 4 && weightGoal) ||
-      (currentPage === 5 && exerciseGoal)// Check for weight goal
+      (currentPage === 3 && age) ||
+      (currentPage === 4 && gender) ||
+      (currentPage === 5 && weightGoal) ||
+      (currentPage === 6 && exerciseGoal)
+      
     ) {
       const nextPage = currentPage + 1;
-      if (nextPage < 6) {
+      if (nextPage < 7) {
         scrollViewRef.current?.scrollTo({ x: nextPage * width, animated: true });
         setCurrentPage(nextPage);
       }
@@ -46,7 +49,7 @@ export default function NewUser() {
         pagingEnabled
         ref={scrollViewRef}
         showsHorizontalScrollIndicator={false}
-        scrollEnabled={(currentPage === 0 && name) || (currentPage === 1 && height) || (currentPage === 2 && weight) || (currentPage === 3 && gender) || (currentPage === 4 && weightGoal)}
+        scrollEnabled={(currentPage === 0 && name) || (currentPage === 1 && height) || (currentPage === 2 && weight) || (currentPage === 3 && age) || (currentPage === 4 && gender) || (currentPage === 5 && weightGoal) || (currentPage === 6 && exerciseGoal)}
         contentContainerStyle={styles.scrollContainer}
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
@@ -90,7 +93,7 @@ export default function NewUser() {
             >
               <Picker.Item label="Seçiniz..." value="" />
               {Array.from({ length: 81 }, (_, i) => (
-                <Picker.Item key={i} label={`${140 + i} cm`} value={`${140 + i}`} />
+                <Picker.Item key={i} label={`${140 + i} cm`} value={parseInt(`${140 + i}`)} />
               ))}
             </Picker>
           </View>
@@ -117,7 +120,7 @@ export default function NewUser() {
             >
               <Picker.Item label="Seçiniz..." value="" />
               {Array.from({ length: 151 }, (_, i) => (
-                <Picker.Item key={i} label={`${30 + i} kg`} value={`${30 + i}`} />
+                <Picker.Item key={i} label={`${30 + i} kg`} value={parseInt(`${30 + i}`)} />
               ))}
             </Picker>
           </View>
@@ -125,6 +128,33 @@ export default function NewUser() {
             style={[styles.nextButton, weight ? styles.activeButton : styles.disabledButton]}
             onPress={handleNext}
             disabled={!weight}
+          >
+            <Icon name="arrow-forward" size={24} color="#656565" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Page 3 - Age Input */}
+        <View style={styles.page}>
+          <TouchableOpacity style={styles.backButton} onPress={handlePrevious}>
+            <Icon name="arrow-back" size={30} color="#FAF7F0" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Yaşınızı Giriniz</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={age}
+              onValueChange={(itemValue) => setAge(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Seçiniz..." value="" />
+              {Array.from({ length: 120 }, (_, i) => (
+                <Picker.Item key={i} label={`${5 + i}`} value={parseInt(`${30 + i}`)} />
+              ))}
+            </Picker>
+          </View>
+          <TouchableOpacity
+            style={[styles.nextButton, age ? styles.activeButton : styles.disabledButton]}
+            onPress={handleNext}
+            disabled={!age}
           >
             <Icon name="arrow-forward" size={24} color="#656565" />
           </TouchableOpacity>
@@ -192,12 +222,13 @@ export default function NewUser() {
           <TouchableOpacity style={styles.backButton} onPress={handlePrevious}>
             <Icon name="arrow-back" size={30} color="#FAF7F0" />
           </TouchableOpacity>
-          <Text style={styles.title}>Etkinlik Hedefinizi Giriniz</Text>
+          <Text style={styles.title}>Aktivite Seviyenizi Girin</Text>
           <View style={styles.radioContainer}>
             {[
-              'Haftanın 1 Günü Spor Yapabilirim',
-              'Haftanın 2-3 Günü Spor Yapabilirim',
-              'Haftanın Her Günü Spor Yapabilirim',
+              'Hiç Spor Yapmam',
+              'Haftanın 1 Günü Spor Yaparım',
+              'Haftanın 2-3 Günü Spor Yaparım',
+              'Haftanın Her Günü Spor Yaparım',
             ].map((label, index) => (
               <TouchableOpacity
                 key={index}
@@ -213,7 +244,7 @@ export default function NewUser() {
           <TouchableOpacity
             style={[styles.nextButton, exerciseGoal ? styles.activeButton : styles.disabledButton]}
             onPress={()=> {
-              router.replace({ pathname: "/(auth)/signUp", params: { name, height, weight, gender, weightGoal, exerciseGoal } })
+              router.replace({ pathname: "/(auth)/signUp", params: { name, height, weight, gender, weightGoal, exerciseGoal, age } })
             }}
             disabled={!exerciseGoal}
           >

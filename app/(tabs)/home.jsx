@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Colors } from './../../constants/Colors'
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, Image, Pressable } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, Image, Pressable, ActivityIndicator  } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Animated, { interpolate, LayoutAnimationConfig, useAnimatedStyle, useSharedValue, withSpring, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
 import { useIsFocused } from '@react-navigation/native';
@@ -8,9 +8,10 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import * as Progress from 'react-native-progress';
 import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/clerk-expo'
 import { LineChart } from 'react-native-chart-kit';
-import { VictoryChart, VictoryLine, VictoryTheme, VictoryAxis } from 'victory';
+import { fetchUserData } from "../../config/fetchUserData";
 export default function Home() {
-  const user = useUser()
+  const { user, isLoaded } = useUser()
+  const userID = user.id
   const isFocused = useIsFocused();
   const scale = useSharedValue(0);
   const screenWidth = Dimensions.get("window").width;
@@ -23,6 +24,21 @@ export default function Home() {
     boy: useSharedValue(125),
   }
   
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Kullanıcı verisini dinlemek için fetchUserData'yı kullan
+    const unsubscribe = fetchUserData(userID, (data) => {
+      setUserData(data);
+      setLoading(false);
+    });
+
+    // Component unmount olduğunda dinlemeyi durdur
+    return () => unsubscribe();
+  }, [userID]);
+
+  console.log(userData)
   const [focusStates, setFocusStates] = useState({
     water: false,
     breakfast: false,
@@ -39,7 +55,6 @@ export default function Home() {
     }));
 
   };
-
   useEffect(() => {
     if (isFocused) {
       scale.value = withSpring(350, {duration: 1500, damping: 15});
@@ -92,42 +107,44 @@ export default function Home() {
   });
   return (
     <SafeAreaView style={[styles.container, { paddingTop: 25}]}>
-      <View style={styles.header}>
+      {userData && (
+        <>
+          <View style={styles.header}>
           <TouchableOpacity>
             <Icon name="menu" size={24} color="#D8D2C2" style={styles.icon} />
           </TouchableOpacity>
-          <Text style={styles.headerText}>Faruk</Text>
+          <Text style={styles.headerText}>{userData.userName}</Text>
         </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Animated.View style={[styles.calorieContainer, animatedStyle]}>
         <View style={{justifyContent:'center', flexDirection:'row'}}>
           <View style={{justifyContent:'center', flexDirection:'column', marginHorizontal:10}}>
             <Text style={styles.textTake}>Alınan</Text>
-            <Text style={styles.textTake}>0</Text>
+            <Text style={styles.textTake}>{userData.calorieTaken}</Text>
             <Text style={styles.textTake}>Kalori</Text>
           </View>
           <View style={{justifyContent:'center', flexDirection:'column', marginHorizontal:10, alignItems:'center'}}>
-            <Text style={styles.percentText}>% 95</Text>
+            <Text style={styles.percentText}>% {parseInt((userData.calorieTaken / userData.calorieGoal) * 100)}</Text>
             <AnimatedCircularProgress
               size={110}
               width={15}
-              fill={50}
+              fill={(userData.calorieTaken / userData.calorieGoal) * 100}
               tintColor="#B17457"
               tintTransparency
               lineCap='round'
               arcSweepAngle={270}
               rotation={225}
-              onAnimationComplete={() => console.log('onAnimationComplete')}
+              onAnimationComplete={() => console.log('')}
               backgroundColor="#D8D2C2" />
           </View>
           <View style={{justifyContent:'center', flexDirection:'column', marginHorizontal:10}}>
             <Text style={styles.textTake}>Verilen</Text>
-            <Text style={styles.textTake}>0</Text>
+            <Text style={styles.textTake}>{userData.calorieGiven}</Text>
             <Text style={styles.textTake}>Kalori</Text>
           </View>
         </View>
         <View style={{justifyContent:'center', flexDirection:'row', marginVertical: 15}}>
-          <Text style={styles.totalCaloriText}>0 / 3500</Text>
+          <Text style={styles.totalCaloriText}>{parseInt(userData.calorieTaken)} / {parseInt(userData.calorieGoal)}</Text>
           <Text style={styles.totalCaloriText}> KCAL</Text>
         </View>
         <View style={{justifyContent:'center', flexDirection:'row', marginVertical: 15}}>
@@ -137,16 +154,16 @@ export default function Home() {
               <AnimatedCircularProgress
               size={50}
               width={10}
-              fill={71}
+              fill={(userData.carboh / userData.carbohGoal) * 100}
               tintColor="#49af47"
               tintTransparency
               lineCap='round'
               arcSweepAngle={270}
               rotation={225}
-              onAnimationComplete={() => console.log('onAnimationComplete')}
+              onAnimationComplete={() => console.log('')}
               backgroundColor="#D8D2C2" />
             </View>
-            <Text style={styles.nutrient}>0/410 gr</Text>
+            <Text style={styles.nutrient}>{userData.carboh}/{userData.carbohGoal} gr</Text>
           </View>
           <View style={{justifyContent:'center', flexDirection:'column', marginHorizontal:15}}>
             <Text style={styles.nutrient}>Protein</Text>
@@ -154,16 +171,16 @@ export default function Home() {
               <AnimatedCircularProgress
               size={50}
               width={10}
-              fill={55}
+              fill={(userData.protein / userData.proteinGoal) * 100}
               tintColor="#C96868"
               tintTransparency
               lineCap='round'
               arcSweepAngle={270}
               rotation={225}
-              onAnimationComplete={() => console.log('onAnimationComplete')}
+              onAnimationComplete={() => console.log('')}
               backgroundColor="#D8D2C2" />
             </View>
-            <Text style={styles.nutrient}>0/410 gr</Text>
+            <Text style={styles.nutrient}>{userData.protein}/{userData.proteinGoal} gr</Text>
           </View>
           <View style={{justifyContent:'center', flexDirection:'column', marginHorizontal:15}}>
             <Text style={styles.nutrient}>Yağ</Text>
@@ -171,16 +188,16 @@ export default function Home() {
               <AnimatedCircularProgress
               size={50}
               width={10}
-              fill={25}
+              fill={(userData.fat / userData.fatGoal) * 100}
               tintColor="#FFC470"
               tintTransparency
               lineCap='round'
               arcSweepAngle={270}
               rotation={225}
-              onAnimationComplete={() => console.log('onAnimationComplete')}
+              onAnimationComplete={() => console.log('')}
               backgroundColor="#D8D2C2" />
             </View>
-            <Text style={styles.nutrient}>0/410 gr</Text>
+            <Text style={styles.nutrient}>{userData.fat}/{userData.fatGoal} gr</Text>
           </View>
           </View>          
         </Animated.View>
@@ -404,11 +421,12 @@ export default function Home() {
               )}
             </View>
            </View>
-        </Animated.View>
-        </Pressable>
-      </ScrollView>
+          </Animated.View>
+          </Pressable>
+        </ScrollView>
+        </>
+      )}
     </SafeAreaView>
-
   );
 }
 
