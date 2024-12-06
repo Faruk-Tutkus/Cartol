@@ -90,24 +90,28 @@ export default function SignUp() {
         return (10 * weight + 6.25 * height - 5 * age - 161) * exerciseGoalFoo()
     }
   }
-  console.log(exerciseGoalFoo(), weight, height, age)
+  const currentMonth = new Date().getMonth(); // Şu anki ayın indeksini al (0-11)
   const userData = {
     userName: name || 'Kullanıcı',
-    height: height || '180',
-    weight: weight || '70',
-    age: age || 22,
+    height: Array.from({ length: 12 }, () => parseInt(height))
+    .reduce((acc, value, index) => ({ ...acc, [index]: value }), {}),
+    weight: Array.from({ length: 12 }, () => parseInt(weight))
+      .reduce((acc, value, index) => ({ ...acc, [index]: value }), {}),
+    age: parseInt(age) || 22,
     gender: gender || 'man',
     weightGoal: weightGoalFoo() || '0',
     exerciseGoal: exerciseGoalFoo() || '0',
     calorieTaken: 0,
     calorieGiven: 0,
-    calorieGoal: calorieGoal() || 2500, 
-    carbohGoal: 500,
-    proteinGoal: 500,
-    fatGoal: 500,
+    calorieGoal: calorieGoal() || 2500,
+    carbohGoal: (calorieGoal() * 0.5) / 4,
+    proteinGoal: (calorieGoal() * 0.2) / 4,
+    fatGoal: (calorieGoal() * 0.3) / 9,
     carboh: 0,
     protein: 0,
-    fat: 0
+    fat: 0,
+    waterGoal: calorieGoal() / 1000,
+    water: 0
   };
 
   
@@ -187,6 +191,7 @@ export default function SignUp() {
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId })
+        const userID = signUp.createdUserId
         addUserData(userID,userData)
         router.replace('/(tabs)/home')
       } else {

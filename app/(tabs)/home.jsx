@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Colors } from './../../constants/Colors'
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, Image, Pressable, ActivityIndicator  } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, Image, Pressable, ActivityIndicator, Alert  } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Animated, { interpolate, LayoutAnimationConfig, useAnimatedStyle, useSharedValue, withSpring, SlideInLeft, SlideOutRight } from 'react-native-reanimated'
 import { useIsFocused } from '@react-navigation/native';
@@ -9,11 +9,96 @@ import * as Progress from 'react-native-progress';
 import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/clerk-expo'
 import { LineChart } from 'react-native-chart-kit';
 import { fetchUserData } from "../../config/fetchUserData";
+import { router } from 'expo-router';
+import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { db } from '../../config/FirebaseConfig'
 export default function Home() {
   const { user, isLoaded } = useUser()
   const userID = user.id
+  const { signOut } = useAuth()
   const isFocused = useIsFocused();
   const scale = useSharedValue(0);
+  const [selected, setSelected] = useState({
+    '100ml': {
+      state: false,
+      color: 'transparent',
+    },
+    '250ml': {
+      state: false,
+      color: 'transparent',
+    },
+    '300ml': {
+      state: false,
+      color: 'transparent',
+    },
+    '500ml': {
+      state: false,
+      color: 'transparent',
+    },
+    '750ml': {
+      state: false,
+      color: 'transparent',
+    },
+    '1L': {
+      state: false,
+      color: 'transparent',
+    },
+    '2L': {
+      state: false,
+      color: 'transparent',
+    },
+  });
+
+  const handlePressWater = (key) => {
+    setSelected((prev) => {
+      const updated = { ...prev };
+      updated[key].state = !updated[key].state;
+      updated[key].color = updated[key].state ? '#4A4967' : 'transparent';
+
+      return updated;
+    });
+  };
+
+  const updateUserWater = async (uid, newWaterValue) => {
+    try {
+      // Belirli bir kullanıcı dokümanına referans al
+      const userDocRef = doc(db, 'users', uid);
+  
+      // 'water' alanını güncelle
+      await updateDoc(userDocRef, {
+        water: userData.water + newWaterValue,
+      });
+  
+      console.log('Water değeri başarıyla güncellendi.');
+    } catch (error) {
+      console.error('Water değeri güncellenirken hata oluştu:', error);
+    }
+  };
+  const addWater = ()=> {
+    var waterAmount = 0
+    if (selected['100ml'].state === true) {
+      waterAmount = 0.1
+    }
+    if (selected['250ml'].state === true) {
+      waterAmount = 0.25
+    }
+    if (selected['300ml'].state === true) {
+      waterAmount = 0.3
+    }
+    if (selected['500ml'].state === true) {
+      waterAmount = 0.5
+    }
+    if (selected['750ml'].state === true) {
+      waterAmount = 0.75
+    }
+    if (selected['1L'].state === true) {
+      waterAmount = 1
+    }
+    if (selected['2L'].state === true) {
+      waterAmount = 2
+    }
+    updateUserWater(userID, waterAmount)
+  }
   const screenWidth = Dimensions.get("window").width;
   const scaleMeals = {
     breakfast: useSharedValue(125),
@@ -23,22 +108,24 @@ export default function Home() {
     kilo: useSharedValue(125),
     boy: useSharedValue(125),
   }
-  
+
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Kullanıcı verisini dinlemek için fetchUserData'yı kullan
     const unsubscribe = fetchUserData(userID, (data) => {
       setUserData(data);
+      if (data == null) {
+        signOut()
+        router.replace('/(auth)/signIn')
+        Alert.alert("OAuth Error", `Kullanıcı Bulunamadı`);
+      }
       setLoading(false);
     });
-
-    // Component unmount olduğunda dinlemeyi durdur
     return () => unsubscribe();
   }, [userID]);
 
-  console.log(userData)
+  
   const [focusStates, setFocusStates] = useState({
     water: false,
     breakfast: false,
@@ -81,7 +168,7 @@ export default function Home() {
     }
 
     if (focusStates.water) {
-      scaleMeals.water.value = withSpring(200, {duration: 500, damping: 15});
+      scaleMeals.water.value = withSpring(550, {duration: 500, damping: 15});
     } else {
       scaleMeals.water.value = withSpring(125, {duration: 500, damping: 15});
     }
@@ -109,12 +196,6 @@ export default function Home() {
     <SafeAreaView style={[styles.container, { paddingTop: 25}]}>
       {userData && (
         <>
-          <View style={styles.header}>
-          <TouchableOpacity>
-            <Icon name="menu" size={24} color="#D8D2C2" style={styles.icon} />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>{userData.userName}</Text>
-        </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Animated.View style={[styles.calorieContainer, animatedStyle]}>
         <View style={{justifyContent:'center', flexDirection:'row'}}>
@@ -149,7 +230,7 @@ export default function Home() {
         </View>
         <View style={{justifyContent:'center', flexDirection:'row', marginVertical: 15}}>
           <View style={{justifyContent:'center', flexDirection:'column', marginHorizontal:15}}>
-            <Text style={styles.nutrient}>Karbonhidrat</Text>
+            <Text style={styles.nutrient}>K.hidrat</Text>
             <View style={{alignItems:'center'}}>
               <AnimatedCircularProgress
               size={50}
@@ -163,7 +244,7 @@ export default function Home() {
               onAnimationComplete={() => console.log('')}
               backgroundColor="#D8D2C2" />
             </View>
-            <Text style={styles.nutrient}>{userData.carboh}/{userData.carbohGoal} gr</Text>
+            <Text style={styles.nutrient}>{parseInt(userData.carboh)}/{parseInt(userData.carbohGoal)} gr</Text>
           </View>
           <View style={{justifyContent:'center', flexDirection:'column', marginHorizontal:15}}>
             <Text style={styles.nutrient}>Protein</Text>
@@ -180,7 +261,7 @@ export default function Home() {
               onAnimationComplete={() => console.log('')}
               backgroundColor="#D8D2C2" />
             </View>
-            <Text style={styles.nutrient}>{userData.protein}/{userData.proteinGoal} gr</Text>
+            <Text style={styles.nutrient}>{parseInt(userData.protein)}/{parseInt(userData.proteinGoal)} gr</Text>
           </View>
           <View style={{justifyContent:'center', flexDirection:'column', marginHorizontal:15}}>
             <Text style={styles.nutrient}>Yağ</Text>
@@ -197,7 +278,7 @@ export default function Home() {
               onAnimationComplete={() => console.log('')}
               backgroundColor="#D8D2C2" />
             </View>
-            <Text style={styles.nutrient}>{userData.fat}/{userData.fatGoal} gr</Text>
+            <Text style={styles.nutrient}>{parseInt(userData.fat)}/{parseInt(userData.fatGoal)} gr</Text>
           </View>
           </View>          
         </Animated.View>
@@ -205,17 +286,70 @@ export default function Home() {
         <Animated.View style={[styles.mealContainer, { height: scaleMeals.water }]}>
           <Image source={require('../../assets/images/water.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15, position:'absolute', top: -15}} />
           <View style={{flexDirection:'row', justifyContent:'space-between', width:'100%'}}>
-            <View style={{alignSelf:'flex-start',  paddingHorizontal: 15}}>
+            <View style={{alignSelf:'flex-start', paddingHorizontal: 15}}>
               <Text style={[styles.calorieText]}>Su İhtiyacı</Text>
             </View>
             <View style={{alignSelf:'flex-end', paddingHorizontal: 15}}>
-              <Text style={[styles.calorieText]}>0 ml</Text>
+              <Text style={[styles.calorieText]}>{userData.water.toPrecision(3)} L / {userData.waterGoal.toPrecision(3)} L</Text>
             </View>
           </View>
-          <Progress.Bar progress={0.3} width={300} color='#4793AF' unfilledColor='#4793AF33' height={20} borderWidth={0} borderRadius={10} style={{marginHorizontal:10, marginVertical:7, alignSelf:'center'}}/>
+          <Progress.Bar progress={(userData.water / userData.waterGoal)} width={300} color='#4793AF' unfilledColor='#4793AF33' height={20} borderWidth={0} borderRadius={10} style={{marginHorizontal:10, marginVertical:7, alignSelf:'center'}}/>
           {focusStates.water && (
             <View style={{ marginTop: 10, alignSelf: 'center' }}>
-             <TouchableOpacity style={styles.addFoodButton} onPress={()=> {console.log('clicked')}}>
+              <View>
+                <Text style={[styles.calorieText, { textAlign: 'center' }]}>İçilen Su Miktarı</Text>
+                <View style={{flexDirection:'column'}}>
+                  <View style={{flexDirection:'row' , justifyContent: 'center', marginVertical:15}}>
+                    <View style={{marginHorizontal:25}}>
+                      <TouchableOpacity onPress={()=> {handlePressWater('100ml')}} style={{backgroundColor: selected['100ml'].color, borderRadius: 10}}>
+                        <Image source={require('../../assets/images/100ml.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15}} />
+                        <Text style={[styles.calorieText, { textAlign: 'center', fontSize: 15 }]}>100 ml</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={{marginHorizontal:25}}>
+                      <TouchableOpacity onPress={()=> {handlePressWater('250ml')}} style={{backgroundColor: selected['250ml'].color, borderRadius: 10}}>
+                        <Image source={require('../../assets/images/250ml.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15}} />
+                        <Text style={[styles.calorieText, { textAlign: 'center', fontSize: 15 }]}>250 ml</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={{marginHorizontal:25}}>
+                      <TouchableOpacity onPress={()=> {handlePressWater('300ml')}} style={{backgroundColor: selected['300ml'].color, borderRadius: 10}}>
+                        <Image source={require('../../assets/images/300ml.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15}} />
+                        <Text style={[styles.calorieText, { textAlign: 'center', fontSize: 15 }]}>300 ml</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View style={{flexDirection:'row' , justifyContent: 'center', marginVertical:15}}>
+                    <View style={{marginHorizontal:25}}>
+                      <TouchableOpacity onPress={()=> {handlePressWater('500ml')}} style={{backgroundColor: selected['500ml'].color, borderRadius: 10}}>
+                        <Image source={require('../../assets/images/500ml.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15}} />
+                        <Text style={[styles.calorieText, { textAlign: 'center', fontSize: 15 }]}>500 ml</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={{marginHorizontal:25}}>
+                      <TouchableOpacity onPress={()=> {handlePressWater('750ml')}} style={{backgroundColor: selected['750ml'].color, borderRadius: 10}}>
+                        <Image source={require('../../assets/images/750ml.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15}} />
+                        <Text style={[styles.calorieText, { textAlign: 'center', fontSize: 15 }]}>750 ml</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={{marginHorizontal:25}}>
+                      <TouchableOpacity onPress={()=> {handlePressWater('1L')}} style={{backgroundColor: selected['1L'].color, borderRadius: 10}}>
+                        <Image source={require('../../assets/images/1Litre.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15}} />
+                        <Text style={[styles.calorieText, { textAlign: 'center', fontSize: 15 }]}>1 L</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View style={{flexDirection:'row' , justifyContent: 'center' , marginVertical:15}}>
+                    <View style={{marginHorizontal:25}}>
+                      <TouchableOpacity onPress={()=> {handlePressWater('2L')}} style={{backgroundColor: selected['2L'].color, borderRadius: 10}}>
+                        <Image source={require('../../assets/images/2Litre.png')} resizeMode='center' style={{width:50, height:50, borderRadius:15}} />
+                        <Text style={[styles.calorieText, { textAlign: 'center', fontSize: 15 }]}>2 L</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </View>
+             <TouchableOpacity style={styles.addFoodButton} onPress={()=> {addWater()}}>
               <Text style={styles.addFoodButtonText}>Su Ekle</Text>
             </TouchableOpacity>
            </View>
@@ -309,20 +443,7 @@ export default function Home() {
                     ],
                     datasets: [
                       {
-                        data: [
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                        ],
+                        data: Object.values(userData.height)
                       },
                     ],
                   }}
@@ -332,7 +453,7 @@ export default function Home() {
                   chartConfig={{
                     backgroundGradientFrom: '#2F2F2F', // Koyu bir arka plan
                     backgroundGradientTo: '#B17457', // Gradyan bitiş rengi
-                    decimalPlaces: 2, // Sayıların ondalık basamağı
+                    decimalPlaces: 1, // Sayıların ondalık basamağı
                     color: (opacity = 1) => `rgba(216, 210, 194, ${opacity})`, // Grafikteki çizgilerin rengi
                     labelColor: (opacity = 1) => `rgba(216, 210, 194, ${opacity})`, // Etiketlerin rengi (eksende görünenler)
                     propsForLabels: {
@@ -378,20 +499,7 @@ export default function Home() {
                     ],
                     datasets: [
                       {
-                        data: [
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                          Math.random() * 100,
-                        ],
+                        data: Object.values(userData.weight)
                       },
                     ],
                   }}
@@ -401,7 +509,7 @@ export default function Home() {
                   chartConfig={{
                     backgroundGradientFrom: '#2F2F2F', // Koyu bir arka plan
                     backgroundGradientTo: '#B17457', // Gradyan bitiş rengi
-                    decimalPlaces: 2, // Sayıların ondalık basamağı
+                    decimalPlaces: 1, // Sayıların ondalık basamağı
                     color: (opacity = 1) => `rgba(216, 210, 194, ${opacity})`, // Grafikteki çizgilerin rengi
                     labelColor: (opacity = 1) => `rgba(216, 210, 194, ${opacity})`, // Etiketlerin rengi (eksende görünenler)
                     propsForLabels: {

@@ -31,7 +31,6 @@ export default function SignIn() {
   const colorValue = useRef(new Animated.Value(0)).current;
   const shakePasswordAnim = useRef(new Animated.Value(0)).current
 
-
   const handleEmailChange = (text) => {
     setEmail(text);
   };
@@ -145,13 +144,16 @@ export default function SignIn() {
         provider === 'google' ? startGoogleOAuthFlow :
         provider === 'facebook' ? startFacebookOAuthFlow :
         startAppleOAuthFlow;
-      const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL('/home'),
+      const { createdSessionId, setActive, signIn } = await startOAuthFlow({
+        redirectUrl: Linking.createURL('/signIn'),
       });
       
       if (createdSessionId) {
-        setActive({session: createdSessionId})
-        router.replace('/(tabs)/home')
+        await setActive({session: createdSessionId})
+        if (signIn.status == 'complete') {
+          router.replace('/(tabs)/home')
+        }
+        
       } else {
         
       }

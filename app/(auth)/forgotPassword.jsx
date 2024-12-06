@@ -90,8 +90,6 @@ export default function ForgotPassword() {
 		}
 	};
 
-
-
     const emailLabelAnim = useRef(new Animated.Value(0)).current;
     const passwordLabelAnim = useRef(new Animated.Value(0)).current;
     const codeLabelAnim = useRef(new Animated.Value(0)).current;
@@ -248,7 +246,7 @@ export default function ForgotPassword() {
         <View>
             {!successfulCreation && (
                 <>
-                    <View style={{width: '80%'}}>
+                    <View style={{width: '80%', alignSelf:'center'}}>
                         <Text style={{fontSize: 15, color: '#FAF7F0', textAlign: 'center'}}>
                             Sıfırlama kodu için lütfen geçerli e-posta adresinizi girin
                         </Text>
@@ -280,7 +278,7 @@ export default function ForgotPassword() {
             )}
             {successfulCreation && (
                 <>
-                    <View style={{width: '80%'}}>
+                    <View style={{width: '80%' , alignSelf:'center'}}>
                         <Text style={{fontSize: 15, color: '#FAF7F0', textAlign: 'center'}}>
                             {email} adresine kodu gönderdik
                         </Text>

@@ -1,6 +1,7 @@
 import signUp from "./signUp";
 import signIn from "./signIn";
 import newUser from "./newUser";
+import home from "../(tabs)/home"
 import forgotPassword from "./forgotPassword";
 import React, { useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native';
@@ -18,6 +19,7 @@ export default function App() {
         <Stack.Screen name="signIn" component={signIn} options={{ headerShown: false }}/>
         <Stack.Screen name="signUp" component={signUp} options={{ headerShown: false }}/>
         <Stack.Screen name="forgotPassword" component={forgotPassword} options={{ headerShown: false }}/>
+        <Stack.Screen name="home" component={home} options={{ headerShown: false }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -14,8 +14,7 @@ function TabBar({ state, descriptors, navigation }) {
     }, []);
 
     const tabPositionX = useSharedValue(0);
-
-    // Her geçişte `tabPositionX` pozisyonunu güncellemek için `useEffect` kullanıyoruz
+    
     useEffect(() => {
         tabPositionX.value = withSpring(buttonWidth * state.index, { duration: 750 });
     }, [state.index, buttonWidth]);
@@ -96,7 +95,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#1A1A19',
+        backgroundColor: '#2e2d2d',
         marginHorizontal: 15,
         paddingVertical: 15,
         borderRadius: 35,

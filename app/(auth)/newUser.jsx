@@ -6,10 +6,10 @@ import { router } from 'expo-router';
 const { width } = Dimensions.get('window');
 export default function NewUser() {
   const [name, setName] = useState('');
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState(0);
+  const [weight, setWeight] = useState(0);
   const [gender, setGender] = useState('');
-  const [age, setAge] = useState('');
+  const [age, setAge] = useState(0);
   const [weightGoal, setWeightGoal] = useState(''); // weight goal state
   const [exerciseGoal, setExerciseGoal] = useState(''); // weight goal state
   const scrollViewRef = useRef(null);
@@ -147,7 +147,7 @@ export default function NewUser() {
             >
               <Picker.Item label="Seçiniz..." value="" />
               {Array.from({ length: 120 }, (_, i) => (
-                <Picker.Item key={i} label={`${5 + i}`} value={parseInt(`${30 + i}`)} />
+                <Picker.Item key={i} label={`${5 + i}`} value={parseInt(`${5 + i}`)} />
               ))}
             </Picker>
           </View>
