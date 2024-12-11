@@ -77,25 +77,25 @@ export default function Home() {
   const addWater = ()=> {
     var waterAmount = 0
     if (selected['100ml'].state === true) {
-      waterAmount = 0.1
+      waterAmount += 0.1
     }
     if (selected['250ml'].state === true) {
-      waterAmount = 0.25
+      waterAmount += 0.25
     }
     if (selected['300ml'].state === true) {
-      waterAmount = 0.3
+      waterAmount += 0.3
     }
     if (selected['500ml'].state === true) {
-      waterAmount = 0.5
+      waterAmount += 0.5
     }
     if (selected['750ml'].state === true) {
-      waterAmount = 0.75
+      waterAmount += 0.75
     }
     if (selected['1L'].state === true) {
-      waterAmount = 1
+      waterAmount += 1
     }
     if (selected['2L'].state === true) {
-      waterAmount = 2
+      waterAmount += 2
     }
     updateUserWater(userID, waterAmount)
   }
