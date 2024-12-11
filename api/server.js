@@ -58,36 +58,55 @@ app.post('/upload', upload.single('image'), (req, res) => {
 });
 
 app.post('/server', async (req, res) => {
-  const {text, image} = req.body
-  const files = [
-    await uploadToGemini(image, "image/jpeg"),
-  ];
-  const chatSession = model.startChat({
-    generationConfig,
-    history: [
-      {
-        role: "user",
-        parts: [
-          {
-            fileData: {
-              mimeType: files[0].mimeType,
-              fileUri: files[0].uri,
-            },
-          },
-          {text: text},
-        ],
-      },
-    ],
-  });
+  try {
+    const { text, image } = req.body;
+    const files = [];
 
-  const result = await chatSession.sendMessage("");
-  const response = result.response.text();
-  console.log(files);
-  return res.json({ 
-    response,
-  });
-  
-})
+    // Eğer resim varsa işleme al
+    if (image) {
+      const uploadedImage = await uploadToGemini(image, "image/jpeg");
+      files.push({
+        mimeType: uploadedImage.mimeType,
+        fileUri: uploadedImage.uri,
+      });
+    }
+
+    // Chat oturumu başlatma
+    const chatSession = model.startChat({
+      generationConfig,
+      history: [
+        {
+          role: "user",
+          parts: [
+            ...(files.length > 0
+              ? [
+                  {
+                    fileData: {
+                      mimeType: files[0].mimeType,
+                      fileUri: files[0].fileUri,
+                    },
+                  },
+                ]
+              : []),
+            { text: `${text}. Açıklamayı Türkçe yap` },
+          ],
+        },
+      ],
+    });
+
+    // Mesaj gönder ve cevap al
+    const result = await chatSession.sendMessage("");
+    const response = result.response.text();
+
+    return res.json({
+      response,
+    });
+  } catch (error) {
+    console.error('Hata:', error);
+    return res.status(500).json({ error: 'İşlem sırasında bir hata oluştu.' });
+  }
+});
+
 const port = 3000
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

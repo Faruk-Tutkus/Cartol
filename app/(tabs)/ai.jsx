@@ -180,6 +180,7 @@ export default function Ai() {
       image: selectedImage
     }));
     setSelectedImage('')
+    setSelectedImageServer('')
     // Kullanıcı mesajını ekrana ekle
     setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, formattedMessages)
@@ -238,20 +239,27 @@ export default function Ai() {
   };
 
   const customSendButton = (props) => {
-    const { text, onSend } = props;
+    const { text, onSend } = props; // isFetching props'u ekleniyor
     return (
       <TouchableOpacity
-        style={styles.customSendButton}
+        style={[
+          styles.customSendButton,
+          isFetching && styles.disabledButton, // isFetching true ise ek stil
+        ]}
         onPress={() => {
-          if (text && onSend) {
+          if (text && onSend && !isFetching) { // isFetching kontrolü
             onSend({ text: text.trim() }, true);
           }
         }}
+        disabled={isFetching} // Tıklanabilirliği kontrol et
       >
-        <Text style={styles.customSendButtonText}>Gönder</Text>
+        <Text style={styles.customSendButtonText}>
+          Gönder
+        </Text>
       </TouchableOpacity>
     );
   };
+  
   const formatText = (response) => {
     return response
       .replace(/\n/g, '<br>')
@@ -369,24 +377,24 @@ export default function Ai() {
         ]}
       >
         <Modal
-        transparent={true}
-        animationType="fade"
-        visible={isModalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.optionButton} onPress={openCamera}>
-              <Icon name="camerao" size={30} color="#000" />
-              <Text style={styles.optionText}>Kamera</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.optionButton} onPress={openGallery}>
-              <Icon name="picture" size={30} color="#000" />
-              <Text style={styles.optionText}>Galeri</Text>
-            </TouchableOpacity>
+          transparent={true}
+          animationType="fade"
+          visible={isModalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity style={styles.optionButton} onPress={openCamera}>
+                <Icon name="camerao" size={30} color="#B17457" />
+                <Text style={styles.optionText}>Kamera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.optionButton} onPress={openGallery}>
+                <Icon name="picture" size={30} color="#B17457" />
+                <Text style={styles.optionText}>Galeri</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
       <GiftedChat
         messages={messages}
         onSend={(messages) => onSend(messages)}
@@ -521,10 +529,14 @@ const styles = StyleSheet.create({
   optionText: {
     marginLeft: 10,
     fontSize: 16,
-    color: '#000',
+    color: '#1A1A19',
+    fontWeight:'bold'
   },
   iconButton: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#ccc', // Tıklanamaz durum için farklı renk
   },
 });
