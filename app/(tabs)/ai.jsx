@@ -50,7 +50,7 @@ export default function Ai() {
         type: `image/${fileExtension}`, // Güncellenmiş içerik türü
       });
       console.log("Dosyaaa",formData)
-      const response = await fetch('http://192.168.1.37:3000/upload', {
+      const response = await fetch('http://192.168.1.38:3000/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -195,7 +195,7 @@ export default function Ai() {
     setIsFetching(true);
     try {
       const userMessage = formattedMessages[0]; // Kullanıcının gönderdiği ilk mesaj
-      const response = await fetch('http://192.168.1.37:3000/server', {
+      const response = await fetch('http://192.168.1.38:3000/server', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
