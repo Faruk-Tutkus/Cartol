@@ -21,6 +21,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { server } from 'typescript';
+import { fetchMealData } from '../../config/fetchMealData';
 
 export default function Ai() {
   const isKeyboardVisible = useKeyboardStatus();
@@ -50,7 +51,7 @@ export default function Ai() {
         type: `image/${fileExtension}`, // Güncellenmiş içerik türü
       });
       console.log("Dosyaaa",formData)
-      const response = await fetch('http://192.168.1.38:3000/upload', {
+      const response = await fetch('http://192.168.1.34:3000/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -172,71 +173,125 @@ export default function Ai() {
   }, [userId]);
 
   const onSend = async (newMessages = []) => {
-    
     const formattedMessages = newMessages.map((message) => ({
       ...message,
       _id: message._id || Math.random().toString(),
       createdAt: message.createdAt || new Date(),
-      image: selectedImage
+      image: selectedImage,
     }));
-    setSelectedImage('')
-    setSelectedImageServer('')
-    // Kullanıcı mesajını ekrana ekle
+    setSelectedImage('');
+    setSelectedImageServer('');
+  
+    // Add user message to the chat
     setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, formattedMessages)
     );
   
-    // Mesajları Firestore'a kaydet
+    // Save messages to Firestore
     for (const message of formattedMessages) {
       await addMessageToUser(userId, message);
     }
   
-    // API çağrısı sırasında yazmayı engelle
     setIsFetching(true);
+  
     try {
-      const userMessage = formattedMessages[0]; // Kullanıcının gönderdiği ilk mesaj
-      const response = await fetch('http://192.168.1.38:3000/server', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: userMessage.text || null,
-          image: selectedImageServer || null,
-        }),
-      });
-      
-      if (!response.ok) {
-        console.error('API isteği başarısız:', response.status);
-        return;
-      }
-      
-      const data = await response.json();
-      const botMessage = {
-        _id: Math.random().toString(),
-        text: data.response, // API'den dönen metin
-        createdAt: new Date(),
-        user: {
-          _id: 2, // Bot ID'si
-          name: 'Bot',
-          avatar: logo, // Botun avatarı
-        },
+      const userMessage = formattedMessages[0]; // User's first message
+  
+      // Fetch all meals
+      const fetchAllMeals = async () => {
+        const mealIDs = ['breakfast', 'lunch', 'dinner'];
+        const allMeals = {};
+  
+        await Promise.all(
+          mealIDs.map((mealID) =>
+            new Promise((resolve) => {
+              fetchMealData(mealID, (mealData) => {
+                if (mealData) {
+                  allMeals[mealID] = mealData;
+                }
+                resolve();
+              });
+            })
+          )
+        );
+        
+        return allMeals;
       };
-    
-      setMessages((previousMessages) =>
-        GiftedChat.append(previousMessages, [botMessage])
-      );
-    
-      // Bot mesajını Firestore'a kaydet
-      await addMessageToUser(userId, botMessage);
-      
+  
+      const allMeals = await fetchAllMeals();
+  
+      // Check if the user's query matches a meal
+      const matchedMeal = Object.entries(allMeals).flatMap(([mealType, meals]) =>
+        Object.entries(meals).map(([name, details]) => ({
+          mealType,
+          name,
+          ...details,
+        }))
+      ).find((meal) => meal.name.toLowerCase() === userMessage.text.toLowerCase());
+  
+      if (matchedMeal) {
+        const botMessage = {
+          _id: Math.random().toString(),
+          text: `Tarif: ${matchedMeal.description}\nMalzemeler: ${matchedMeal.ingredients}`,
+          createdAt: new Date(),
+          user: {
+            _id: 2,
+            name: 'Bot',
+            avatar: logo,
+          },
+        };
+  
+        setMessages((previousMessages) =>
+          GiftedChat.append(previousMessages, [botMessage])
+        );
+        await addMessageToUser(userId, botMessage);
+      } else {
+        // If no match, send the query along with all meals to AI
+        const response = await fetch('http://192.168.1.34:3000/server', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: userMessage.text || null,
+            image: selectedImageServer || null,
+            meals: Object.entries(allMeals).flatMap(([mealType, meals]) =>
+              Object.keys(meals) // Send only meal names
+            ),
+          }),
+        });
+  
+        if (!response.ok) {
+          console.error('API request failed:', response.status);
+          return;
+        }
+  
+        const data = await response.json();
+        const botMessage = {
+          _id: Math.random().toString(),
+          text: data.response, // AI-generated response
+          createdAt: new Date(),
+          user: {
+            _id: 2,
+            name: 'Bot',
+            avatar: logo,
+          },
+        };
+  
+        setMessages((previousMessages) =>
+          GiftedChat.append(previousMessages, [botMessage])
+        );
+        await addMessageToUser(userId, botMessage);
+      }
     } catch (error) {
-      console.error('API isteği sırasında hata:', error);
+      console.error('Error during API request:', error);
     } finally {
-      // API isteği tamamlandığında yazmayı yeniden etkinleştir
       setIsFetching(false);
     }
   };
+  
+  
+  
 
   const customSendButton = (props) => {
     const { text, onSend } = props; // isFetching props'u ekleniyor

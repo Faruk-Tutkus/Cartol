@@ -8,7 +8,7 @@ const dotenv = require('dotenv')
 const bodyParser = require('body-parser')
 const app = express()
 app.use(cors());
-const apiKey = 'AIzaSyDz4pvtvF4kAmUYgW_wRi4xyxoZAmZOc0M';
+const apiKey = 'AIzaSyCoHH73Md9Ah6dudpV7l5jzIAHfYQgx6is';
 const genAI = new GoogleGenerativeAI(apiKey);
 const fileManager = new GoogleAIFileManager(apiKey);
 const multer = require('multer');
@@ -59,7 +59,7 @@ app.post('/upload', upload.single('image'), (req, res) => {
 
 app.post('/server', async (req, res) => {
   try {
-    const { text, image } = req.body;
+    const { text, image, meals } = req.body;
     const files = [];
 
     // Eğer resim varsa işleme al
@@ -70,7 +70,7 @@ app.post('/server', async (req, res) => {
         fileUri: uploadedImage.uri,
       });
     }
-
+    console.log(meals)
     // Chat oturumu başlatma
     const chatSession = model.startChat({
       generationConfig,
@@ -88,7 +88,7 @@ app.post('/server', async (req, res) => {
                   },
                 ]
               : []),
-            { text: `${text}. Açıklamayı Türkçe yap` },
+            { text: `Verilen yiyeceği öncelikle ${meals} içerinde ara eğer var ise bana bu yemeğin yapılışını, kullanılan malzemeleri ve ne kadar kalori, protein, yağ ve karbonhidrat içerdiğini de yaz ama eğer yoksa bana listedeki en çok benzeyeni getir, benzeyende yoksa listeden bağımsız bir şekilde yemeğin yapılışını, kullanılan malzemeleri ve ne kadar kalori, protein, yağ ve karbonhidrat içerdiğini yaz. Açıklamayı Türkçe yap. Liste ile ilgili bana bilgilendirme yapma.` },
           ],
         },
       ],
